@@ -41,6 +41,7 @@ body {
 }
 
 .board-wrap {
+  position: relative;
   width: min(82vmin, 620px);
   aspect-ratio: 1;
   padding: clamp(8px, 1.4vmin, 14px);
@@ -96,18 +97,10 @@ body {
   inset: auto 0 112px;
   display: grid;
   justify-items: center;
-  gap: 16px;
   pointer-events: none;
   opacity: 0;
   transform: translateY(16px);
   animation: titleIn 900ms ease-out 5900ms forwards;
-}
-
-.ornament {
-  width: min(46vw, 370px);
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--ink) 18%, var(--ink) 82%, transparent);
-  opacity: 0.92;
 }
 
 h1 {
@@ -177,11 +170,10 @@ h1 {
 
 @media (max-width: 720px) {
   .board-wrap {
-    width: min(94vw, 560px);
+    width: min(76vw, 560px);
   }
 
   .title-block {
     inset: auto 0 92px;
-    gap: 14px;
   }
 }
