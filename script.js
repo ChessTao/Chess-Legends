@@ -1,43 +1,40 @@
-const portraits = [
-  "Фотографии/1.Стейниц.png",
-  "Фотографии/2.Ласкер.png",
-  "Фотографии/3.Капабланка.png",
-  "Фотографии/4.Алехин.jpg",
-  "Фотографии/5.Эйве.png",
-  "Фотографии/6.Ботвинник.png",
-  "Фотографии/7.Смыслов.png",
-  "Фотографии/8.Таль.png",
-  "Фотографии/9.Петросян.png",
-  "Фотографии/10.Спасский.jpg",
-  "Фотографии/11.Фишер.jpg",
-  "Фотографии/12.Карпов.png",
-  "Фотографии/13.Каспаров.jpg",
-  "Фотографии/14.Крамник.jpg",
-  "Фотографии/15.Ананд.jpeg",
-  "Фотографии/16.Карлсен.jpg",
-  "Фотографии/17.Дин Лижень.jpg",
-  "Фотографии/18.Морфи.jpg",
-  "Фотографии/19.Андерсен.png",
-  "Фотографии/20.Рубинштейн.jpg",
-  "Фотографии/21.Бронштейн.jpg",
-  "Фотографии/22.Керес.png",
-  "Фотографии/23.Корчной.png",
-  "Фотографии/24.Иванчук.jpg",
-  "Фотографии/25.Топалов.jpg",
-  "Фотографии/26.Свидлер.jpg",
-  "Фотографии/27.Полгар.jpg",
-  "Фотографии/28.Аронян.jpg",
-  "Фотографии/29.Мамедьяров.jpg",
-  "Фотографии/30.Накамура.jpg",
-  "Фотографии/31.Каруана.jpg",
-  "Фотографии/32.Непомнящий.jpg"
-];
+const appLegends = window.ChessLegendsData.legends;
+const appDifficultySettings = window.ChessLegendsData.difficultySettings;
+const { showScreen } = window.ChessLegendsScreens;
+const { getGameSettings, setGameSettings, initSetupControls } = window.ChessLegendsSetup;
+const { renderGamePreview } = window.ChessLegendsGamePreview;
+
+const STORAGE_KEY = "chessLegendsState";
 
 const board = document.querySelector("#board");
+const introScreen = document.querySelector("#introScreen");
+const setupScreen = document.querySelector("#setupScreen");
+const gameScreen = document.querySelector("#gameScreen");
+const startButton = document.querySelector("#startButton");
+const playButton = document.querySelector("#playButton");
+const backToSetup = document.querySelector("#backToSetup");
+const gameChoice = document.querySelector("#gameChoice");
+const scorePanel = document.querySelector("#scorePanel");
+const memoryBoard = document.querySelector("#memoryBoard");
 const lightCells = [];
 
 function shuffle(items) {
   return [...items].sort(() => Math.random() - 0.5);
+}
+
+function loadState() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+
+function saveState(screenName) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    screen: screenName,
+    settings: getGameSettings()
+  }));
 }
 
 function buildBoard() {
@@ -58,17 +55,69 @@ function buildBoard() {
 
 function revealPortraits() {
   const cells = shuffle(lightCells);
-  const images = shuffle(portraits);
+  const images = shuffle(appLegends);
 
   cells.forEach((cell, index) => {
     const image = document.createElement("img");
     image.className = "portrait";
-    image.src = images[index % images.length];
+    image.src = images[index % images.length].photo;
     image.alt = "";
     image.style.animationDelay = `${900 + index * 128}ms`;
     cell.append(image);
   });
 }
 
+function startGamePreview() {
+  renderGamePreview({
+    settings: getGameSettings(),
+    legends: appLegends,
+    difficultySettings: appDifficultySettings,
+    gameChoice,
+    scorePanel,
+    memoryBoard,
+    shuffle
+  });
+  showScreen(gameScreen);
+  saveState("game");
+}
+
+function restoreState() {
+  const state = loadState();
+
+  setGameSettings(state.settings);
+
+  if (state.screen === "game") {
+    startGamePreview();
+    return;
+  }
+
+  if (state.screen === "setup") {
+    showScreen(setupScreen);
+    return;
+  }
+
+  showScreen(introScreen);
+}
+
 buildBoard();
 revealPortraits();
+initSetupControls();
+restoreState();
+
+startButton.addEventListener("click", () => {
+  showScreen(setupScreen);
+  saveState("setup");
+});
+
+playButton.addEventListener("click", startGamePreview);
+
+backToSetup.addEventListener("click", () => {
+  showScreen(setupScreen);
+  saveState("setup");
+});
+
+document.querySelectorAll(".option-row, .segmented-control, .difficulty-row").forEach((group) => {
+  group.addEventListener("click", () => {
+    window.setTimeout(() => saveState("setup"), 0);
+  });
+});

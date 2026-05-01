@@ -1,26 +1,106 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Chess Legends</title>
+    <title>Шахматные Легенды</title>
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <main class="intro" aria-label="Chess Legends intro">
-      <section class="stage">
-        <div class="board-wrap">
-          <div class="board" id="board" aria-hidden="true"></div>
-        </div>
+    <main class="app" aria-label="Шахматные Легенды">
+      <section class="intro screen is-active" id="introScreen" aria-label="Заставка игры Шахматные Легенды">
+        <div class="stage">
+          <div class="board-wrap">
+            <div class="board" id="board" aria-hidden="true"></div>
+          </div>
 
-        <div class="title-block">
-          <h1>Chess Legends</h1>
-        </div>
+          <div class="title-block">
+            <h1>Шахматные Легенды</h1>
+          </div>
 
-        <button class="start-button" type="button">Start</button>
+          <button class="start-button" id="startButton" type="button">СТАРТ</button>
+        </div>
+      </section>
+
+      <section class="setup screen" id="setupScreen" aria-label="Настройка игры">
+        <div class="setup-panel">
+          <header class="setup-header">
+            <h2>Шахматные Легенды</h2>
+            <p class="setup-subtitle">Выберите игру</p>
+          </header>
+
+          <div class="setup-grid">
+            <section class="option-group" aria-labelledby="cardTypeTitle">
+              <h3 id="cardTypeTitle">Тип карточек</h3>
+              <div class="option-row">
+                <button class="option-card is-selected" type="button" data-value="Фото - фото" aria-pressed="true">
+                  <span class="option-title">Фото - фото</span>
+                  <span class="option-text">Найдите две одинаковые фотографии.</span>
+                </button>
+                <button class="option-card" type="button" data-value="Фото - фамилия" aria-pressed="false">
+                  <span class="option-title">Фото - фамилия</span>
+                  <span class="option-text">Сопоставьте портрет и фамилию.</span>
+                </button>
+              </div>
+            </section>
+
+            <section class="option-group" aria-labelledby="modeTitle">
+              <h3 id="modeTitle">Режим</h3>
+              <div class="segmented-control" aria-label="Режим игры">
+                <button class="segment is-selected" type="button" data-value="Один игрок" aria-pressed="true">Один игрок</button>
+                <button class="segment" type="button" data-value="Два игрока" aria-pressed="false">Два игрока</button>
+              </div>
+            </section>
+
+            <section class="option-group" aria-labelledby="difficultyTitle">
+              <h3 id="difficultyTitle">Сложность</h3>
+              <div class="difficulty-row">
+                <button class="difficulty is-selected" type="button" data-value="Начинающий" data-tooltip="16 карточек" aria-pressed="true">Начинающий</button>
+                <button class="difficulty" type="button" data-value="Опытный" data-tooltip="32 карточки" aria-pressed="false">Опытный</button>
+                <button class="difficulty" type="button" data-value="Мастер" data-tooltip="48 карточек" aria-pressed="false">Мастер</button>
+                <button class="difficulty" type="button" data-value="Гроссмейстер" data-tooltip="64 карточки" aria-pressed="false">Гроссмейстер</button>
+              </div>
+            </section>
+          </div>
+
+          <button class="play-button" id="playButton" type="button">НАЧАТЬ ИГРУ</button>
+        </div>
+      </section>
+
+      <section class="game screen" id="gameScreen" aria-label="Игровое поле Memory">
+        <div class="game-shell">
+          <header class="game-header">
+            <div>
+              <p class="game-title">Шахматные Легенды</p>
+              <p class="game-choice" id="gameChoice">Фото - фото / Один игрок / Начинающий</p>
+            </div>
+            <button class="back-button" id="backToSetup" type="button">Назад</button>
+          </header>
+
+          <section class="score-panel" id="scorePanel" aria-label="Счет игры">
+            <div class="score-card">
+              <span class="score-label">Время</span>
+              <strong>00:00</strong>
+            </div>
+            <div class="score-card">
+              <span class="score-label">Ходы</span>
+              <strong>0</strong>
+            </div>
+            <div class="score-card">
+              <span class="score-label">Пары</span>
+              <strong id="pairsPreview">0 / 8</strong>
+            </div>
+          </section>
+
+          <div class="memory-board" id="memoryBoard" aria-label="Карточки Memory"></div>
+        </div>
       </section>
     </main>
 
+    <script src="data.js"></script>
+    <script src="screens.js"></script>
+    <script src="setup.js"></script>
+    <script src="game-preview.js"></script>
     <script src="script.js"></script>
   </body>
 </html>
