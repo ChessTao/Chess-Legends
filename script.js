@@ -86,16 +86,6 @@ function restoreState() {
 
   setGameSettings(state.settings);
 
-  if (state.screen === "game") {
-    startGamePreview();
-    return;
-  }
-
-  if (state.screen === "setup") {
-    showScreen(setupScreen);
-    return;
-  }
-
   showScreen(introScreen);
 }
 
