@@ -35,7 +35,7 @@ window.ChessLegendsData = {
   ],
   difficultySettings: {
     "Начинающий": { pairs: 8, columns: 4 },
-    "Опытный": { pairs: 16, columns: 8 },
+    "КМС": { pairs: 16, columns: 8 },
     "Мастер": { pairs: 24, columns: 12 },
     "Гроссмейстер": { pairs: 32, columns: 12 }
   }
