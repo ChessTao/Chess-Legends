@@ -93,6 +93,18 @@
           </section>
 
           <div class="memory-board" id="memoryBoard" aria-label="Карточки Memory"></div>
+
+          <section class="result-panel" id="resultPanel" aria-live="polite" aria-hidden="true">
+            <div class="result-dialog">
+              <p class="result-kicker">Игра завершена</p>
+              <h2 id="resultTitle">Партия сыграна</h2>
+              <p class="result-summary" id="resultSummary"></p>
+              <div class="result-actions">
+                <button class="result-button" id="replayButton" type="button">Играть снова</button>
+                <button class="result-button is-secondary" id="changeSettingsButton" type="button">Настройки</button>
+              </div>
+            </div>
+          </section>
         </div>
       </section>
     </main>

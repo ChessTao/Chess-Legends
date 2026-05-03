@@ -2,7 +2,7 @@ const appLegends = window.ChessLegendsData.legends;
 const appDifficultySettings = window.ChessLegendsData.difficultySettings;
 const { showScreen } = window.ChessLegendsScreens;
 const { getGameSettings, setGameSettings, initSetupControls } = window.ChessLegendsSetup;
-const { renderGamePreview } = window.ChessLegendsGamePreview;
+const { renderGamePreview, stopGame } = window.ChessLegendsGamePreview;
 
 const STORAGE_KEY = "chessLegendsState";
 
@@ -16,6 +16,11 @@ const backToSetup = document.querySelector("#backToSetup");
 const gameChoice = document.querySelector("#gameChoice");
 const scorePanel = document.querySelector("#scorePanel");
 const memoryBoard = document.querySelector("#memoryBoard");
+const resultPanel = document.querySelector("#resultPanel");
+const resultTitle = document.querySelector("#resultTitle");
+const resultSummary = document.querySelector("#resultSummary");
+const replayButton = document.querySelector("#replayButton");
+const changeSettingsButton = document.querySelector("#changeSettingsButton");
 const lightCells = [];
 
 function shuffle(items) {
@@ -75,6 +80,16 @@ function startGamePreview() {
     gameChoice,
     scorePanel,
     memoryBoard,
+    resultPanel,
+    resultTitle,
+    resultSummary,
+    replayButton,
+    changeSettingsButton,
+    showSetup: () => {
+      stopGame();
+      showScreen(setupScreen);
+      saveState("setup");
+    },
     shuffle
   });
   showScreen(gameScreen);
@@ -102,6 +117,7 @@ startButton.addEventListener("click", () => {
 playButton.addEventListener("click", startGamePreview);
 
 backToSetup.addEventListener("click", () => {
+  stopGame();
   showScreen(setupScreen);
   saveState("setup");
 });
