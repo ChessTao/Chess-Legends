@@ -3,10 +3,10 @@ const appDifficultySettings = window.ChessLegendsData.difficultySettings;
 const { showScreen } = window.ChessLegendsScreens;
 const { getGameSettings, setGameSettings, initSetupControls } = window.ChessLegendsSetup;
 const { renderGamePreview, stopGame } = window.ChessLegendsGamePreview;
+const { initIntro } = window.ChessLegendsIntro;
 
 const STORAGE_KEY = "chessLegendsState";
 
-const board = document.querySelector("#board");
 const introScreen = document.querySelector("#introScreen");
 const setupScreen = document.querySelector("#setupScreen");
 const gameScreen = document.querySelector("#gameScreen");
@@ -21,7 +21,6 @@ const resultTitle = document.querySelector("#resultTitle");
 const resultSummary = document.querySelector("#resultSummary");
 const replayButton = document.querySelector("#replayButton");
 const changeSettingsButton = document.querySelector("#changeSettingsButton");
-const lightCells = [];
 
 function shuffle(items) {
   return [...items].sort(() => Math.random() - 0.5);
@@ -40,36 +39,6 @@ function saveState(screenName) {
     screen: screenName,
     settings: getGameSettings()
   }));
-}
-
-function buildBoard() {
-  for (let row = 0; row < 8; row += 1) {
-    for (let col = 0; col < 8; col += 1) {
-      const cell = document.createElement("div");
-      const isLight = (row + col) % 2 === 0;
-
-      cell.className = `cell ${isLight ? "light" : "dark"}`;
-      board.append(cell);
-
-      if (isLight) {
-        lightCells.push(cell);
-      }
-    }
-  }
-}
-
-function revealPortraits() {
-  const cells = shuffle(lightCells);
-  const images = shuffle(appLegends);
-
-  cells.forEach((cell, index) => {
-    const image = document.createElement("img");
-    image.className = "portrait";
-    image.src = images[index % images.length].photo;
-    image.alt = "";
-    image.style.animationDelay = `${900 + index * 128}ms`;
-    cell.append(image);
-  });
 }
 
 function startGamePreview() {
@@ -104,8 +73,7 @@ function restoreState() {
   showScreen(introScreen);
 }
 
-buildBoard();
-revealPortraits();
+initIntro(appLegends);
 initSetupControls();
 restoreState();
 
