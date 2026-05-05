@@ -24,13 +24,18 @@
     const images = shuffle(legends);
 
     cells.forEach((cell, index) => {
+      const card = document.createElement("div");
       const image = document.createElement("img");
+
+      card.className = "portrait-card";
+      card.style.setProperty("--portrait-delay", `${900 + index * 128}ms`);
 
       image.className = "portrait";
       image.src = images[index % images.length].photo;
       image.alt = "";
-      image.style.setProperty("--portrait-delay", `${900 + index * 128}ms`);
-      cell.append(image);
+
+      card.append(image);
+      cell.append(card);
     });
   }
 

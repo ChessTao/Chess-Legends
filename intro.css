@@ -45,29 +45,52 @@
   display: grid;
   place-items: center;
   overflow: hidden;
+  perspective: 700px;
 }
 
 .cell.light {
   background: linear-gradient(145deg, #f0dfc3, #d9bd93);
-  animation: lightSquareClear 650ms ease-in-out 5700ms forwards;
+  animation: lightSquareToDark 820ms ease-in-out 5700ms forwards;
 }
 
 .cell.dark {
   background: linear-gradient(145deg, #4b241d, #7b4934);
 }
 
-.portrait {
+.portrait-card {
+  position: relative;
   width: 82%;
   height: 82%;
-  object-fit: cover;
-  border: 2px solid rgba(255, 244, 222, 0.9);
   border-radius: 10px;
   box-shadow: 0 8px 20px rgba(38, 19, 14, 0.38);
   opacity: 0;
+  transform-style: preserve-3d;
   transform: scale(0.55) rotate(-3deg);
   animation:
     portraitIn 520ms cubic-bezier(.2, .9, .2, 1.2) var(--portrait-delay) forwards,
-    portraitOut 650ms ease-in-out 5700ms forwards;
+    portraitFlip 820ms ease-in-out 5700ms forwards;
+}
+
+.portrait-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(255, 232, 185, 0.35);
+  border-radius: inherit;
+  background:
+    linear-gradient(145deg, rgba(255, 232, 185, 0.12), rgba(64, 31, 24, 0.18)),
+    linear-gradient(145deg, #4b241d, #7b4934);
+  backface-visibility: hidden;
+  transform: rotateY(180deg);
+}
+
+.portrait {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 244, 222, 0.9);
+  border-radius: inherit;
+  backface-visibility: hidden;
 }
 
 .title-block {
@@ -79,7 +102,7 @@
   pointer-events: none;
   opacity: 0;
   perspective: 900px;
-  animation: titleFadeIn 900ms ease-out 6500ms forwards;
+  animation: titleFadeIn 900ms ease-out 6750ms forwards;
 }
 
 h1 {
@@ -101,7 +124,7 @@ h1 {
   filter: blur(10px);
   transform: translateZ(-460px) scale(0.36);
   transform-origin: center;
-  animation: titleDepthIn 1150ms cubic-bezier(.16, .95, .2, 1) 6500ms forwards;
+  animation: titleDepthIn 1150ms cubic-bezier(.16, .95, .2, 1) 6750ms forwards;
 }
 
 .start-button {
@@ -119,7 +142,7 @@ h1 {
   font: 700 1rem/1 Georgia, "Times New Roman", serif;
   cursor: pointer;
   box-shadow: 0 12px 30px rgba(24, 11, 8, 0.32);
-  animation: buttonIn 650ms ease-out 7200ms forwards;
+  animation: buttonIn 650ms ease-out 7450ms forwards;
   transition: background 160ms ease;
 }
 
@@ -141,16 +164,26 @@ h1 {
   }
 }
 
-@keyframes portraitOut {
+@keyframes portraitFlip {
+  44% {
+    opacity: 1;
+    transform: scale(1) rotateY(88deg);
+  }
+
+  76% {
+    opacity: 1;
+    transform: scale(1) rotateY(180deg);
+  }
+
   to {
     opacity: 0;
-    transform: scale(0.82) rotate(0deg);
+    transform: scale(1.06) rotateY(180deg);
   }
 }
 
-@keyframes lightSquareClear {
+@keyframes lightSquareToDark {
   to {
-    background: linear-gradient(145deg, #fff8ea, #f3e6cf);
+    background: linear-gradient(145deg, #4b241d, #7b4934);
   }
 }
 
