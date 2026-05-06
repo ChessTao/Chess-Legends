@@ -50,7 +50,7 @@
 
 .cell.light {
   background: linear-gradient(145deg, #f0dfc3, #d9bd93);
-  animation: lightSquareToDark 820ms ease-in-out 5700ms forwards;
+  animation: lightSquareToDark 120ms ease-in 6160ms forwards;
 }
 
 .cell.dark {
@@ -62,13 +62,15 @@
   width: 82%;
   height: 82%;
   border-radius: 10px;
+  background: linear-gradient(145deg, #4b241d, #7b4934);
   box-shadow: 0 8px 20px rgba(38, 19, 14, 0.38);
   opacity: 0;
+  overflow: hidden;
   transform-style: preserve-3d;
   transform: scale(0.55) rotate(-3deg);
   animation:
     portraitIn 520ms cubic-bezier(.2, .9, .2, 1.2) var(--portrait-delay) forwards,
-    portraitFlip 820ms ease-in-out 5700ms forwards;
+    portraitFlip 820ms ease-in-out 6280ms forwards;
 }
 
 .portrait-card::after {
@@ -81,6 +83,7 @@
     linear-gradient(145deg, rgba(255, 232, 185, 0.12), rgba(64, 31, 24, 0.18)),
     linear-gradient(145deg, #4b241d, #7b4934);
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   transform: rotateY(180deg);
 }
 
@@ -90,7 +93,10 @@
   object-fit: cover;
   border: 2px solid rgba(255, 244, 222, 0.9);
   border-radius: inherit;
+  background: linear-gradient(145deg, #4b241d, #7b4934);
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  animation: portraitFaceHide 1ms step-end 6650ms forwards;
 }
 
 .title-block {
@@ -102,7 +108,7 @@
   pointer-events: none;
   opacity: 0;
   perspective: 900px;
-  animation: titleFadeIn 900ms ease-out 6750ms forwards;
+  animation: titleFadeIn 900ms ease-out 7100ms forwards;
 }
 
 h1 {
@@ -124,7 +130,7 @@ h1 {
   filter: blur(10px);
   transform: translateZ(-460px) scale(0.36);
   transform-origin: center;
-  animation: titleDepthIn 1150ms cubic-bezier(.16, .95, .2, 1) 6750ms forwards;
+  animation: titleDepthIn 1150ms cubic-bezier(.16, .95, .2, 1) 7100ms forwards;
 }
 
 .start-button {
@@ -142,7 +148,7 @@ h1 {
   font: 700 1rem/1 Georgia, "Times New Roman", serif;
   cursor: pointer;
   box-shadow: 0 12px 30px rgba(24, 11, 8, 0.32);
-  animation: buttonIn 650ms ease-out 7450ms forwards;
+  animation: buttonIn 650ms ease-out 7800ms forwards;
   transition: background 160ms ease;
 }
 
@@ -170,14 +176,25 @@ h1 {
     transform: scale(1) rotateY(88deg);
   }
 
-  76% {
+  72% {
     opacity: 1;
+    transform: scale(1) rotateY(180deg);
+  }
+
+  73% {
+    opacity: 0;
     transform: scale(1) rotateY(180deg);
   }
 
   to {
     opacity: 0;
-    transform: scale(1.06) rotateY(180deg);
+    transform: scale(1) rotateY(180deg);
+  }
+}
+
+@keyframes portraitFaceHide {
+  to {
+    opacity: 0;
   }
 }
 

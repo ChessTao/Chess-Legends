@@ -28,7 +28,7 @@
       const image = document.createElement("img");
 
       card.className = "portrait-card";
-      card.style.setProperty("--portrait-delay", `${900 + index * 128}ms`);
+      card.style.setProperty("--portrait-delay", `${1280 + index * 128}ms`);
 
       image.className = "portrait";
       image.src = images[index % images.length].photo;

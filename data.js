@@ -1,4 +1,4 @@
-window.ChessLegendsData = {
+﻿window.ChessLegendsData = {
   legends: [
     { surname: "Стейниц", photo: "Фотографии/1.Стейниц.png" },
     { surname: "Ласкер", photo: "Фотографии/2.Ласкер.png" },

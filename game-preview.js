@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
   let state = null;
   let timerId = null;
 
@@ -119,7 +119,7 @@
     cardElement.classList.toggle("is-open", isOpen);
     cardElement.setAttribute(
       "aria-label",
-      isOpen ? `Открыта карточка: ${card.surname}` : "Закрытая карточка Memory"
+      isOpen ? `Открытая карточка: ${card.surname}` : "Закрытая карточка Memory"
     );
   }
 
