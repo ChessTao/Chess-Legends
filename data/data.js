@@ -1,0 +1,42 @@
+﻿window.ChessLegendsData = {
+  legends: [
+    { surname: "Стейниц", photo: "assets/photos/1.Стейниц.png" },
+    { surname: "Ласкер", photo: "assets/photos/2.Ласкер.png" },
+    { surname: "Капабланка", photo: "assets/photos/3.Капабланка.png" },
+    { surname: "Алехин", photo: "assets/photos/4.Алехин.jpg" },
+    { surname: "Эйве", photo: "assets/photos/5.Эйве.png" },
+    { surname: "Ботвинник", photo: "assets/photos/6.Ботвинник.png" },
+    { surname: "Смыслов", photo: "assets/photos/7.Смыслов.png" },
+    { surname: "Таль", photo: "assets/photos/8.Таль.png" },
+    { surname: "Петросян", photo: "assets/photos/9.Петросян.png" },
+    { surname: "Спасский", photo: "assets/photos/10.Спасский.jpg" },
+    { surname: "Фишер", photo: "assets/photos/11.Фишер.jpg" },
+    { surname: "Карпов", photo: "assets/photos/12.Карпов.png" },
+    { surname: "Каспаров", photo: "assets/photos/13.Каспаров.jpg" },
+    { surname: "Крамник", photo: "assets/photos/14.Крамник.jpg" },
+    { surname: "Ананд", photo: "assets/photos/15.Ананд.jpeg" },
+    { surname: "Карлсен", photo: "assets/photos/16.Карлсен.jpg" },
+    { surname: "Дин Лижень", photo: "assets/photos/17.Дин Лижень.jpg" },
+    { surname: "Морфи", photo: "assets/photos/18.Морфи.jpg" },
+    { surname: "Андерсен", photo: "assets/photos/19.Андерсен.png" },
+    { surname: "Рубинштейн", photo: "assets/photos/20.Рубинштейн.jpg" },
+    { surname: "Бронштейн", photo: "assets/photos/21.Бронштейн.jpg" },
+    { surname: "Керес", photo: "assets/photos/22.Керес.png" },
+    { surname: "Корчной", photo: "assets/photos/23.Корчной.png" },
+    { surname: "Иванчук", photo: "assets/photos/24.Иванчук.jpg" },
+    { surname: "Топалов", photo: "assets/photos/25.Топалов.jpg" },
+    { surname: "Свидлер", photo: "assets/photos/26.Свидлер.jpg" },
+    { surname: "Полгар", photo: "assets/photos/27.Полгар.jpg" },
+    { surname: "Аронян", photo: "assets/photos/28.Аронян.jpg" },
+    { surname: "Мамедьяров", photo: "assets/photos/29.Мамедьяров.jpg" },
+    { surname: "Накамура", photo: "assets/photos/30.Накамура.jpg" },
+    { surname: "Каруана", photo: "assets/photos/31.Каруана.jpg" },
+    { surname: "Непомнящий", photo: "assets/photos/32.Непомнящий.jpg" }
+  ],
+  difficultySettings: {
+    "Начинающий": { pairs: 8, columns: 4 },
+    "КМС": { pairs: 16, columns: 8 },
+    "Мастер": { pairs: 24, columns: 12 },
+    "Гроссмейстер": { pairs: 32, columns: 12 }
+  }
+};

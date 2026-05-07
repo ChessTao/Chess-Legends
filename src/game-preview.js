@@ -132,21 +132,35 @@
   }
 
   function showResult() {
-    const { resultPanel, resultTitle, resultSummary, settings, scores, moves, seconds } = state;
+    const { resultPanel, resultTitle, resultSummary, settings, scores, moves, seconds, onGameComplete } = state;
+    const result = {
+      settings,
+      scores: [...scores],
+      winner: null,
+      moves,
+      seconds
+    };
 
     stopTimer();
     state.isComplete = true;
 
     if (settings.mode === "Два игрока") {
-      const resultText = scores[0] === scores[1]
-        ? "Ничья"
-        : `Победил Игрок ${scores[0] > scores[1] ? 1 : 2}`;
+      result.winner = scores[0] === scores[1] ? null : scores[0] > scores[1] ? 0 : 1;
+      const resultText = result.winner === null ? "Ничья" : `Победил Игрок ${result.winner + 1}`;
 
       resultTitle.textContent = resultText;
       resultSummary.textContent = `Счет ${scores[0]}:${scores[1]}, всего ходов: ${moves}.`;
     } else {
       resultTitle.textContent = "Все пары найдены";
       resultSummary.textContent = `Время: ${formatTime(seconds)}. Ходы: ${moves}.`;
+    }
+
+    if (onGameComplete) {
+      const profileResult = onGameComplete(result);
+
+      if (profileResult?.messages?.length) {
+        resultSummary.textContent = `${resultSummary.textContent} ${profileResult.messages.join(" ")}`;
+      }
     }
 
     resultPanel.classList.add("is-visible");
@@ -258,6 +272,7 @@
       resultSummary,
       replayButton,
       changeSettingsButton,
+      onGameComplete,
       showSetup,
       shuffle
     } = options;
@@ -290,6 +305,7 @@
       resultPanel,
       resultTitle,
       resultSummary,
+      onGameComplete,
       cardElements: [...memoryBoard.querySelectorAll(".memory-card")],
       openCards: [],
       matchedPairs: 0,

@@ -42,10 +42,12 @@ body {
 .setup {
   place-items: center;
   padding: clamp(14px, 3vw, 34px);
+  overflow: auto;
 }
 
 .setup-panel {
   width: min(94vw, 980px);
+  max-height: calc(100vh - clamp(28px, 6vw, 68px));
   display: grid;
   grid-template-rows: auto 1fr auto;
   gap: clamp(14px, 2.2vh, 24px);
@@ -56,6 +58,7 @@ body {
     linear-gradient(135deg, rgba(255, 248, 232, 0.12), rgba(42, 19, 15, 0.64)),
     rgba(32, 16, 13, 0.62);
   box-shadow: 0 28px 90px var(--shadow);
+  overflow: auto;
   opacity: 0;
   transform: translateY(18px) scale(0.98);
   animation: setupIn 560ms ease-out forwards;
@@ -107,6 +110,104 @@ h3 {
   color: var(--paper);
   font-size: 1rem;
   font-weight: 700;
+}
+
+.profile-panel {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(255, 244, 222, 0.42);
+  border-radius: 14px;
+  background: rgba(16, 8, 6, 0.2);
+}
+
+.profile-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+
+.profile-subtitle {
+  margin: 4px 0 0;
+  color: rgba(251, 241, 223, 0.72);
+  font-size: 0.88rem;
+}
+
+.profile-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.9fr);
+  gap: 10px;
+}
+
+.profile-field {
+  display: grid;
+  gap: 5px;
+}
+
+.profile-field span {
+  color: rgba(251, 241, 223, 0.78);
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.profile-field input {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 244, 222, 0.46);
+  border-radius: 10px;
+  color: var(--ink);
+  background: rgba(255, 247, 232, 0.08);
+  font: 700 0.95rem/1 Georgia, "Times New Roman", serif;
+}
+
+.profile-field input:focus {
+  outline: 2px solid rgba(255, 244, 222, 0.55);
+  outline-offset: 2px;
+}
+
+.profile-save {
+  min-width: 112px;
+  min-height: 36px;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 244, 222, 0.76);
+  border-radius: 999px;
+  color: var(--walnut);
+  background: var(--ink);
+  font: 700 0.9rem/1 Georgia, "Times New Roman", serif;
+  cursor: pointer;
+}
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.profile-stat {
+  min-height: 58px;
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  padding: 9px 10px;
+  border: 1px solid rgba(255, 244, 222, 0.28);
+  border-radius: 10px;
+  background: rgba(255, 247, 232, 0.07);
+}
+
+.profile-stat span {
+  color: rgba(251, 241, 223, 0.68);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.profile-stat strong {
+  color: #fff7e8;
+  font-size: clamp(1rem, 2vw, 1.28rem);
+  line-height: 1;
 }
 
 .option-row,
@@ -586,6 +687,23 @@ h3 {
   .difficulty-row {
     grid-template-columns: 1fr;
     border-radius: 16px;
+  }
+
+  .profile-head,
+  .profile-form {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-head {
+    display: grid;
+  }
+
+  .profile-save {
+    justify-self: start;
+  }
+
+  .profile-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .segment,

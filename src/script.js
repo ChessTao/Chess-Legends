@@ -2,6 +2,7 @@ const appLegends = window.ChessLegendsData.legends;
 const appDifficultySettings = window.ChessLegendsData.difficultySettings;
 const { showScreen } = window.ChessLegendsScreens;
 const { getGameSettings, setGameSettings, initSetupControls } = window.ChessLegendsSetup;
+const { initProfile, renderProfile, saveProfileFromForm, updateProfileWithResult } = window.ChessLegendsProfile;
 const { renderGamePreview, stopGame } = window.ChessLegendsGamePreview;
 const { initIntro } = window.ChessLegendsIntro;
 
@@ -21,6 +22,13 @@ const resultTitle = document.querySelector("#resultTitle");
 const resultSummary = document.querySelector("#resultSummary");
 const replayButton = document.querySelector("#replayButton");
 const changeSettingsButton = document.querySelector("#changeSettingsButton");
+const profileElements = {
+  name: document.querySelector("#profileName"),
+  country: document.querySelector("#profileCountry"),
+  chessRating: document.querySelector("#profileChessRating"),
+  stats: document.querySelector("#profileStats"),
+  saveButton: document.querySelector("#profileSaveButton")
+};
 
 function shuffle(items) {
   return [...items].sort(() => Math.random() - 0.5);
@@ -42,6 +50,8 @@ function saveState(screenName) {
 }
 
 function startGamePreview() {
+  saveProfileFromForm(profileElements);
+
   renderGamePreview({
     settings: getGameSettings(),
     legends: appLegends,
@@ -54,6 +64,12 @@ function startGamePreview() {
     resultSummary,
     replayButton,
     changeSettingsButton,
+    onGameComplete: (result) => {
+      const profileResult = updateProfileWithResult(result);
+
+      renderProfile(profileElements, profileResult.profile);
+      return profileResult;
+    },
     showSetup: () => {
       stopGame();
       showScreen(setupScreen);
@@ -75,6 +91,7 @@ function restoreState() {
 
 initIntro(appLegends);
 initSetupControls();
+initProfile(profileElements);
 restoreState();
 
 startButton.addEventListener("click", () => {
