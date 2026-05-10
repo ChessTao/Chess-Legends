@@ -81,6 +81,9 @@
                 <h3 id="accountTitle">Мой профиль</h3>
                 <p class="profile-subtitle">Данные игрока и рекорды по сложностям</p>
               </div>
+              <div class="profile-actions">
+                <button class="profile-link" id="resetProfileStatsButton" type="button">Обнулить статистику</button>
+              </div>
             </div>
 
             <div class="profile-form account-form">
@@ -134,6 +137,38 @@
                 <button class="segment is-selected" type="button" data-value="Один игрок" aria-pressed="true">Один игрок</button>
                 <button class="segment" type="button" data-value="Два игрока" aria-pressed="false">Два игрока</button>
               </div>
+            </section>
+
+            <section class="option-group match-players" id="matchPlayersPanel" aria-labelledby="matchPlayersTitle" hidden>
+              <h3 id="matchPlayersTitle">Участники матча</h3>
+              <div class="match-player-grid">
+                <label class="profile-field">
+                  <span>Игрок 1</span>
+                  <select id="matchPlayer1Select"></select>
+                </label>
+                <button class="profile-link match-create" id="createMatchPlayer1Button" type="button">Создать</button>
+                <label class="profile-field">
+                  <span>Игрок 2</span>
+                  <select id="matchPlayer2Select"></select>
+                </label>
+                <button class="profile-link match-create" id="createMatchPlayer2Button" type="button">Создать</button>
+              </div>
+              <p class="match-player-note" id="matchPlayersNotice" aria-live="polite"></p>
+              <form class="match-player-form" id="matchPlayerCreateForm" hidden>
+                <label class="profile-field">
+                  <span>Имя</span>
+                  <input id="matchPlayerName" type="text" maxlength="40" autocomplete="off" placeholder="Имя игрока">
+                </label>
+                <label class="profile-field">
+                  <span>Страна</span>
+                  <input id="matchPlayerCountry" type="text" list="countryList" maxlength="64" autocomplete="country-name" placeholder="Выберите страну">
+                </label>
+                <div class="match-player-actions">
+                  <button class="profile-save" id="saveMatchPlayerButton" type="submit">Создать игрока</button>
+                  <button class="profile-link" id="cancelMatchPlayerButton" type="button">Отмена</button>
+                </div>
+                <p class="match-player-error" id="matchPlayerCreateError" aria-live="polite"></p>
+              </form>
             </section>
 
             <section class="option-group" aria-labelledby="difficultyTitle">

@@ -4,10 +4,16 @@ const { showScreen } = window.ChessLegendsScreens;
 const { getGameSettings, setGameSettings, initSetupControls } = window.ChessLegendsSetup;
 const {
   createBlankProfile,
+  createProfile,
+  getProfile,
   hasSavedProfile,
+  listProfiles,
   loadProfile,
   initProfile,
+  recordMatchResult,
+  recordProfileResult,
   renderProfile,
+  resetSinglePlayerStats,
   saveProfileFromForm,
   updateProfileWithResult
 } = window.ChessLegendsProfile;
@@ -26,9 +32,21 @@ const continueToSetupButton = document.querySelector("#continueToSetupButton");
 const playButton = document.querySelector("#playButton");
 const backToProfileButton = document.querySelector("#backToProfileButton");
 const backToSetupFromAccountButton = document.querySelector("#backToSetupFromAccountButton");
+const resetProfileStatsButton = document.querySelector("#resetProfileStatsButton");
 const logoutProfileButton = document.querySelector("#logoutProfileButton");
 const backToSetup = document.querySelector("#backToSetup");
 const currentPlayerLabel = document.querySelector("#currentPlayerLabel");
+const matchPlayersPanel = document.querySelector("#matchPlayersPanel");
+const matchPlayer1Select = document.querySelector("#matchPlayer1Select");
+const matchPlayer2Select = document.querySelector("#matchPlayer2Select");
+const createMatchPlayer1Button = document.querySelector("#createMatchPlayer1Button");
+const createMatchPlayer2Button = document.querySelector("#createMatchPlayer2Button");
+const matchPlayersNotice = document.querySelector("#matchPlayersNotice");
+const matchPlayerCreateForm = document.querySelector("#matchPlayerCreateForm");
+const matchPlayerNameInput = document.querySelector("#matchPlayerName");
+const matchPlayerCountryInput = document.querySelector("#matchPlayerCountry");
+const cancelMatchPlayerButton = document.querySelector("#cancelMatchPlayerButton");
+const matchPlayerCreateError = document.querySelector("#matchPlayerCreateError");
 const countryList = document.querySelector("#countryList");
 const gameChoice = document.querySelector("#gameChoice");
 const scorePanel = document.querySelector("#scorePanel");
@@ -51,6 +69,8 @@ const accountElements = {
   stats: document.querySelector("#accountStats")
 };
 const profileModeButtons = document.querySelectorAll(".profile-mode");
+const GUEST_PLAYER_ID = "guest";
+let matchPlayerCreationTarget = null;
 const countryCodes = [
   "AD", "AE", "AF", "AG", "AI", "AL", "AM", "AO", "AQ", "AR", "AS", "AT", "AU", "AW", "AX", "AZ",
   "BA", "BB", "BD", "BE", "BF", "BG", "BH", "BI", "BJ", "BL", "BM", "BN", "BO", "BQ", "BR", "BS",
@@ -84,6 +104,10 @@ function getCountryName(code) {
 
 function normalizeCountryName(name) {
   return name.trim().toLocaleLowerCase("ru");
+}
+
+function normalizeProfileName(name) {
+  return name.trim().replace(/\s+/g, " ").toLocaleLowerCase("ru");
 }
 
 function buildCountryOptions() {
@@ -150,11 +174,24 @@ function loadState() {
   }
 }
 
+function handleStartupActions() {
+  const url = new URL(window.location.href);
+
+  if (url.searchParams.get("resetStats") !== "1") {
+    return;
+  }
+
+  resetSinglePlayerStats();
+  url.searchParams.delete("resetStats");
+  window.history.replaceState({}, "", url);
+}
+
 function saveState(screenName) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({
     screen: screenName,
     profileMode: shouldRememberProfile() ? getProfileMode() : "profile",
     rememberProfile: shouldRememberProfile(),
+    matchPlayers: getMatchPlayerSnapshot(),
     settings: getGameSettings()
   }));
 }
@@ -169,6 +206,214 @@ function refreshSavedProfileButton() {
 
 function getProfileMode() {
   return document.querySelector(".profile-mode.is-selected")?.dataset.value || "profile";
+}
+
+function getProfileOptionText(profile) {
+  const country = profile.country ? `, ${profile.country}` : "";
+
+  return `${profile.name || "Игрок"}${country}`;
+}
+
+function findProfileByName(name) {
+  const normalizedName = normalizeProfileName(name);
+
+  if (!normalizedName) {
+    return null;
+  }
+
+  return listProfiles().find((profile) => normalizeProfileName(profile.name || "") === normalizedName) || null;
+}
+
+function getMatchPlayerSelection() {
+  return {
+    player1Id: matchPlayer1Select?.value || GUEST_PLAYER_ID,
+    player2Id: matchPlayer2Select?.value || GUEST_PLAYER_ID
+  };
+}
+
+function getMatchPlayerProfile(playerId) {
+  return playerId === GUEST_PLAYER_ID ? null : getProfile(playerId);
+}
+
+function getMatchPlayerSnapshot() {
+  const { player1Id, player2Id } = getMatchPlayerSelection();
+  const player1Profile = getMatchPlayerProfile(player1Id);
+  const player2Profile = getMatchPlayerProfile(player2Id);
+
+  return {
+    player1Id,
+    player2Id,
+    player1Name: player1Profile?.name || "Гость 1",
+    player2Name: player2Profile?.name || "Гость 2",
+    player1Country: player1Profile?.country || "",
+    player2Country: player2Profile?.country || ""
+  };
+}
+
+function populateMatchPlayerSelect(select, selectedValue) {
+  const profiles = listProfiles();
+  const fallbackValue = selectedValue || GUEST_PLAYER_ID;
+
+  select.replaceChildren();
+  select.append(new Option("Гость", GUEST_PLAYER_ID));
+
+  profiles.forEach((profile) => {
+    select.append(new Option(getProfileOptionText(profile), profile.id));
+  });
+
+  select.value = [...select.options].some((option) => option.value === fallbackValue)
+    ? fallbackValue
+    : GUEST_PLAYER_ID;
+}
+
+function getSavedMatchProfileId(profileId) {
+  if (!profileId || profileId === GUEST_PLAYER_ID) {
+    return null;
+  }
+
+  return getProfile(profileId) ? profileId : null;
+}
+
+function populateMatchPlayerControls(savedSelection = {}) {
+  const activeProfile = loadProfile();
+  const player1Id = getSavedMatchProfileId(savedSelection.player1Id) || activeProfile.id || GUEST_PLAYER_ID;
+  let player2Id = getSavedMatchProfileId(savedSelection.player2Id) || GUEST_PLAYER_ID;
+
+  if (player2Id !== GUEST_PLAYER_ID && player2Id === player1Id) {
+    player2Id = GUEST_PLAYER_ID;
+  }
+
+  populateMatchPlayerSelect(matchPlayer1Select, player1Id);
+  populateMatchPlayerSelect(matchPlayer2Select, player2Id);
+  updateMatchPlayerNotice();
+}
+
+function isMatchModeSelected() {
+  return getGameSettings().mode === "Два игрока";
+}
+
+function updateMatchPlayersPanel() {
+  matchPlayersPanel.hidden = !isMatchModeSelected();
+
+  if (matchPlayersPanel.hidden) {
+    closeMatchPlayerCreateForm();
+  }
+
+  updateMatchPlayerNotice();
+}
+
+function getMatchPlayerName(playerId, fallbackName) {
+  return getMatchPlayerProfile(playerId)?.name || fallbackName;
+}
+
+function updateMatchPlayerNotice() {
+  const { player1Id, player2Id } = getMatchPlayerSelection();
+  const hasDuplicateProfiles = player1Id !== GUEST_PLAYER_ID && player1Id === player2Id;
+
+  if (hasDuplicateProfiles) {
+    matchPlayersNotice.textContent = "Выберите разные профили для игроков.";
+    return;
+  }
+
+  if (!isMatchModeSelected()) {
+    matchPlayersNotice.textContent = "";
+    return;
+  }
+
+  matchPlayersNotice.textContent = `${getMatchPlayerName(player1Id, "Гость 1")} против ${getMatchPlayerName(player2Id, "Гость 2")}`;
+}
+
+function openMatchPlayerCreateForm(select) {
+  matchPlayerCreationTarget = select;
+  select.value = GUEST_PLAYER_ID;
+  matchPlayerCreateError.textContent = "";
+  matchPlayerNameInput.value = "";
+  matchPlayerCountryInput.value = "";
+  matchPlayerCreateForm.hidden = false;
+  updateMatchPlayerNotice();
+  saveState("setup");
+  matchPlayerNameInput.focus();
+}
+
+function closeMatchPlayerCreateForm() {
+  matchPlayerCreationTarget = null;
+  matchPlayerCreateError.textContent = "";
+  matchPlayerCreateForm.hidden = true;
+}
+
+function createMatchPlayerFromForm(event) {
+  event.preventDefault();
+
+  const name = matchPlayerNameInput.value.trim().replace(/\s+/g, " ");
+
+  if (!name) {
+    matchPlayerCreateError.textContent = "Введите имя игрока.";
+    matchPlayerNameInput.focus();
+    return;
+  }
+
+  if (findProfileByName(name)) {
+    matchPlayerCreateError.textContent = "Игрок с таким именем уже существует.";
+    matchPlayerNameInput.focus();
+    return;
+  }
+
+  const profile = createProfile({
+    name,
+    country: normalizeCountryValue(matchPlayerCountryInput.value)
+  }, {
+    activate: false
+  });
+  const targetSelect = matchPlayerCreationTarget || matchPlayer2Select;
+
+  populateMatchPlayerControls(getMatchPlayerSelection());
+  targetSelect.value = profile.id;
+  closeMatchPlayerCreateForm();
+  updateMatchPlayerNotice();
+  saveState("setup");
+}
+
+function validateMatchPlayers() {
+  if (!isMatchModeSelected()) {
+    return true;
+  }
+
+  const { player1Id, player2Id } = getMatchPlayerSelection();
+
+  if (player1Id !== GUEST_PLAYER_ID && player1Id === player2Id) {
+    window.alert("Для матча выберите два разных профиля или гостя.");
+    return false;
+  }
+
+  return true;
+}
+
+function getMirroredMatchResult(result) {
+  return {
+    ...result,
+    scores: [...(result.scores || [])].reverse(),
+    winner: result.winner === null ? null : result.winner === 0 ? 1 : 0
+  };
+}
+
+function recordSelectedMatchResult(result) {
+  const { player1Id, player2Id } = getMatchPlayerSelection();
+  const hasPlayer1Profile = player1Id !== GUEST_PLAYER_ID;
+  const hasPlayer2Profile = player2Id !== GUEST_PLAYER_ID;
+
+  if (hasPlayer1Profile && hasPlayer2Profile) {
+    recordMatchResult(player1Id, player2Id, result);
+  } else if (hasPlayer1Profile) {
+    recordProfileResult(player1Id, result, { activate: false });
+  } else if (hasPlayer2Profile) {
+    recordProfileResult(player2Id, getMirroredMatchResult(result), { activate: false });
+  }
+
+  const activeProfile = loadProfile();
+
+  renderProfile(profileElements, activeProfile);
+  renderProfile(accountElements, activeProfile);
+  return { messages: [] };
 }
 
 function setProfileMode(mode) {
@@ -249,6 +494,8 @@ function showSetupScreen() {
   }
 
   updateCurrentPlayerLabel();
+  populateMatchPlayerControls(getMatchPlayerSelection());
+  updateMatchPlayersPanel();
   showScreen(setupScreen);
   saveState("setup");
 }
@@ -266,6 +513,10 @@ function logoutProfile() {
 function startGamePreview() {
   const isGuest = getProfileMode() === "guest";
 
+  if (!validateMatchPlayers()) {
+    return;
+  }
+
   if (!isGuest) {
     normalizeProfileCountryField(profileElements);
     saveProfileFromForm(profileElements);
@@ -275,6 +526,7 @@ function startGamePreview() {
 
   renderGamePreview({
     settings: getGameSettings(),
+    matchPlayers: isMatchModeSelected() ? getMatchPlayerSnapshot() : null,
     legends: appLegends,
     difficultySettings: appDifficultySettings,
     gameChoice,
@@ -286,6 +538,10 @@ function startGamePreview() {
     replayButton,
     changeSettingsButton,
     onGameComplete: (result) => {
+      if (result.settings.mode === "Два игрока") {
+        return recordSelectedMatchResult(result);
+      }
+
       if (isGuest) {
         return { messages: [] };
       }
@@ -318,6 +574,8 @@ function restoreState() {
   normalizeProfileCountryField(profileElements);
   normalizeProfileCountryField(accountElements);
   setProfileMode(shouldRestoreProfile ? state.profileMode || "profile" : "profile");
+  populateMatchPlayerControls(state.matchPlayers);
+  updateMatchPlayersPanel();
   refreshSavedProfileButton();
   updateCurrentPlayerLabel();
 
@@ -328,6 +586,7 @@ initIntro(appLegends);
 initSetupControls();
 initCountryList();
 initProfile(profileElements);
+handleStartupActions();
 restoreState();
 
 startButton.addEventListener("click", () => {
@@ -352,8 +611,27 @@ backToSetupFromAccountButton.addEventListener("click", () => {
   renderProfile(profileElements, loadProfile());
   normalizeProfileCountryField(profileElements);
   updateCurrentPlayerLabel();
+  populateMatchPlayerControls(getMatchPlayerSelection());
+  updateMatchPlayersPanel();
   showScreen(setupScreen);
   saveState("setup");
+});
+
+resetProfileStatsButton.addEventListener("click", () => {
+  const shouldReset = window.confirm("Обнулить статистику одиночных игр? Матчи и рейтинг останутся.");
+
+  if (!shouldReset) {
+    return;
+  }
+
+  const profile = resetSinglePlayerStats();
+
+  renderProfile(profileElements, profile);
+  renderProfile(accountElements, profile);
+  normalizeProfileCountryField(profileElements);
+  normalizeProfileCountryField(accountElements);
+  updateCurrentPlayerLabel();
+  saveState("account");
 });
 
 logoutProfileButton.addEventListener("click", logoutProfile);
@@ -368,9 +646,35 @@ backToSetup.addEventListener("click", () => {
 
 document.querySelectorAll(".option-row, .segmented-control, .difficulty-row").forEach((group) => {
   group.addEventListener("click", () => {
-    window.setTimeout(() => saveState("setup"), 0);
+    window.setTimeout(() => {
+      updateMatchPlayersPanel();
+      saveState("setup");
+    }, 0);
   });
 });
+
+matchPlayer1Select.addEventListener("change", () => {
+  closeMatchPlayerCreateForm();
+  updateMatchPlayerNotice();
+  saveState("setup");
+});
+
+matchPlayer2Select.addEventListener("change", () => {
+  closeMatchPlayerCreateForm();
+  updateMatchPlayerNotice();
+  saveState("setup");
+});
+
+createMatchPlayer1Button.addEventListener("click", () => {
+  openMatchPlayerCreateForm(matchPlayer1Select);
+});
+
+createMatchPlayer2Button.addEventListener("click", () => {
+  openMatchPlayerCreateForm(matchPlayer2Select);
+});
+
+matchPlayerCreateForm.addEventListener("submit", createMatchPlayerFromForm);
+cancelMatchPlayerButton.addEventListener("click", closeMatchPlayerCreateForm);
 
 profileModeButtons.forEach((button) => {
   button.addEventListener("click", () => {
@@ -386,6 +690,7 @@ profileElements.loadSavedButton.addEventListener("click", () => {
   normalizeProfileCountryField(profileElements);
   normalizeProfileCountryField(accountElements);
   setProfileMode("profile");
+  populateMatchPlayerControls(getMatchPlayerSelection());
   updateCurrentPlayerLabel();
   saveState("profile");
 });

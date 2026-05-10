@@ -9,6 +9,16 @@
     return `${minutes}:${seconds}`;
   }
 
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (character) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "\"": "&quot;",
+      "'": "&#039;"
+    }[character]));
+  }
+
   function stopTimer() {
     window.clearInterval(timerId);
     timerId = null;
@@ -75,18 +85,22 @@
     const { pairs } = difficultySettings[settings.difficulty];
 
     if (settings.mode === "Два игрока") {
+      const player1Name = getMatchPlayerName(0);
+      const player2Name = getMatchPlayerName(1);
+      const currentPlayerName = getMatchPlayerName(currentPlayer);
+
       scorePanel.innerHTML = `
         <div class="score-card${currentPlayer === 0 ? " is-current" : ""}">
-          <span class="score-label">Игрок 1</span>
+          <span class="score-label">${escapeHtml(player1Name)}</span>
           <strong>${scores[0]}</strong>
         </div>
         <div class="score-card${currentPlayer === 1 ? " is-current" : ""}">
-          <span class="score-label">Игрок 2</span>
+          <span class="score-label">${escapeHtml(player2Name)}</span>
           <strong>${scores[1]}</strong>
         </div>
         <div class="score-card">
           <span class="score-label">Ход</span>
-          <strong>Игрок ${currentPlayer + 1}</strong>
+          <strong>${escapeHtml(currentPlayerName)}</strong>
         </div>
         <div class="score-card">
           <span class="score-label">Ходы</span>
@@ -110,6 +124,18 @@
         <strong>${matchedPairs} / ${pairs}</strong>
       </div>
     `;
+  }
+
+  function getMatchPlayerName(playerIndex) {
+    const fallbackName = `Игрок ${playerIndex + 1}`;
+
+    if (!state?.matchPlayers) {
+      return fallbackName;
+    }
+
+    return playerIndex === 0
+      ? state.matchPlayers.player1Name || fallbackName
+      : state.matchPlayers.player2Name || fallbackName;
   }
 
   function setCardOpen(index, isOpen) {
@@ -146,10 +172,12 @@
 
     if (settings.mode === "Два игрока") {
       result.winner = scores[0] === scores[1] ? null : scores[0] > scores[1] ? 0 : 1;
-      const resultText = result.winner === null ? "Ничья" : `Победил Игрок ${result.winner + 1}`;
+      const player1Name = getMatchPlayerName(0);
+      const player2Name = getMatchPlayerName(1);
+      const resultText = result.winner === null ? "Ничья" : `Победил ${getMatchPlayerName(result.winner)}`;
 
       resultTitle.textContent = resultText;
-      resultSummary.textContent = `Счет ${scores[0]}:${scores[1]}, всего ходов: ${moves}.`;
+      resultSummary.textContent = `Счет ${player1Name} ${scores[0]}:${scores[1]} ${player2Name}, всего ходов: ${moves}.`;
     } else {
       resultTitle.textContent = "Все пары найдены";
       resultSummary.textContent = `Время: ${formatTime(seconds)}. Ходы: ${moves}.`;
@@ -274,7 +302,8 @@
       changeSettingsButton,
       onGameComplete,
       showSetup,
-      shuffle
+      shuffle,
+      matchPlayers
     } = options;
     const { pairs, columns } = difficultySettings[settings.difficulty];
     const cards = buildDeck(settings, legends, difficultySettings, shuffle);
@@ -297,6 +326,7 @@
 
     state = {
       settings,
+      matchPlayers,
       cards,
       legends,
       difficultySettings,

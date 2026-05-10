@@ -197,7 +197,8 @@ h3 {
   text-transform: uppercase;
 }
 
-.profile-field input {
+.profile-field input,
+.profile-field select {
   width: 100%;
   min-height: 38px;
   padding: 0 12px;
@@ -208,7 +209,12 @@ h3 {
   font: 700 0.95rem/1 Georgia, "Times New Roman", serif;
 }
 
-.profile-field input:focus {
+.profile-field select {
+  cursor: pointer;
+}
+
+.profile-field input:focus,
+.profile-field select:focus {
   outline: 2px solid rgba(255, 244, 222, 0.55);
   outline-offset: 2px;
 }
@@ -256,6 +262,55 @@ h3 {
   cursor: pointer;
 }
 
+.match-players[hidden] {
+  display: none;
+}
+
+.match-player-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.match-create {
+  align-self: end;
+  min-width: 96px;
+}
+
+.match-player-note {
+  min-height: 1.2em;
+  margin: 0;
+  color: rgba(251, 241, 223, 0.74);
+  font-size: 0.86rem;
+}
+
+.match-player-form[hidden] {
+  display: none;
+}
+
+.match-player-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  gap: 10px;
+  align-items: end;
+  padding-top: 10px;
+}
+
+.match-player-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.match-player-error {
+  grid-column: 1 / -1;
+  min-height: 1.2em;
+  margin: 0;
+  color: #ffd5c8;
+  font-size: 0.86rem;
+}
+
 .account-form .profile-field input[readonly] {
   cursor: default;
   opacity: 0.78;
@@ -279,7 +334,7 @@ h3 {
 }
 
 .profile-stat-record {
-  min-height: 112px;
+  min-height: 150px;
 }
 
 .profile-stat span {
@@ -297,7 +352,7 @@ h3 {
 
 .profile-stat small {
   color: rgba(251, 241, 223, 0.76);
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   line-height: 1.2;
 }
 
@@ -808,6 +863,22 @@ h3 {
 
   .profile-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .match-player-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .match-player-form {
+    grid-template-columns: 1fr;
+  }
+
+  .match-player-actions {
+    flex-wrap: wrap;
+  }
+
+  .match-create {
+    justify-self: start;
   }
 
   .segment,
