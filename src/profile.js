@@ -4,10 +4,14 @@
   const defaultProfile = {
     name: "Игрок",
     country: "",
-    chessRating: "",
     gameRating: 1000,
     gamesPlayed: 0,
+    matchRating: 1000,
+    singleGamesPlayed: 0,
+    matchGamesPlayed: 0,
     twoPlayerWins: 0,
+    twoPlayerLosses: 0,
+    twoPlayerDraws: 0,
     bestTime: null,
     bestMoves: null,
     recordsByDifficulty: {}
@@ -35,22 +39,31 @@
     }
   }
 
+  function createBlankProfile() {
+    return {
+      ...defaultProfile,
+      name: "",
+      country: ""
+    };
+  }
+
+  function hasSavedProfile() {
+    return Boolean(localStorage.getItem(STORAGE_KEY));
+  }
+
   function saveProfile(profile) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
   }
 
   function getProfileFromForm(elements) {
-    const rating = Number(elements.chessRating.value);
-
     return {
       ...loadProfile(),
       name: elements.name.value.trim() || defaultProfile.name,
-      country: elements.country.value.trim(),
-      chessRating: Number.isFinite(rating) && rating > 0 ? String(Math.round(rating)) : ""
+      country: elements.country.value.trim()
     };
   }
 
-  function calculateRatingGain(result) {
+  function calculateMatchRatingGain(result) {
     const difficultyBonus = {
       "Начинающий": 8,
       "КМС": 14,
@@ -58,51 +71,68 @@
       "Гроссмейстер": 28
     };
 
-    const modeBonus = result.settings.mode === "Два игрока" ? 6 : 0;
-
-    return (difficultyBonus[result.settings.difficulty] || 8) + modeBonus;
+    return (difficultyBonus[result.settings.difficulty] || 8) + 6;
   }
 
   function updateProfileWithResult(result) {
     const profile = loadProfile();
+    const difficulty = result.settings.difficulty;
+    const difficultyRecord = {
+      wins: 0,
+      losses: 0,
+      draws: 0,
+      matchWins: 0,
+      matchLosses: 0,
+      matchDraws: 0,
+      singleGames: 0,
+      totalSingleSeconds: 0,
+      recentSingleSeconds: [],
+      ...(profile.recordsByDifficulty[difficulty] || {})
+    };
     const updatedProfile = {
       ...profile,
       gamesPlayed: profile.gamesPlayed + 1,
-      gameRating: profile.gameRating + calculateRatingGain(result),
       recordsByDifficulty: { ...profile.recordsByDifficulty }
     };
 
     if (result.settings.mode === "Два игрока") {
+      updatedProfile.matchGamesPlayed = (updatedProfile.matchGamesPlayed || 0) + 1;
+      updatedProfile.matchRating = (updatedProfile.matchRating || defaultProfile.matchRating) + calculateMatchRatingGain(result);
+
       if (result.winner === 0) {
         updatedProfile.twoPlayerWins += 1;
+        difficultyRecord.matchWins += 1;
+      } else if (result.winner === 1) {
+        updatedProfile.twoPlayerLosses = (updatedProfile.twoPlayerLosses || 0) + 1;
+        difficultyRecord.matchLosses += 1;
+      } else {
+        updatedProfile.twoPlayerDraws = (updatedProfile.twoPlayerDraws || 0) + 1;
+        difficultyRecord.matchDraws += 1;
       }
 
+      updatedProfile.recordsByDifficulty[difficulty] = difficultyRecord;
       saveProfile(updatedProfile);
       return { profile: updatedProfile, messages: [] };
     }
 
     const messages = [];
-    const difficulty = result.settings.difficulty;
-    const difficultyRecord = {
-      ...(updatedProfile.recordsByDifficulty[difficulty] || {})
-    };
 
-    if (!updatedProfile.bestTime || result.seconds < updatedProfile.bestTime) {
-      updatedProfile.bestTime = result.seconds;
-      messages.push(`Новый рекорд времени: ${formatTime(result.seconds)}.`);
-    }
-
-    if (!updatedProfile.bestMoves || result.moves < updatedProfile.bestMoves) {
-      updatedProfile.bestMoves = result.moves;
-      messages.push(`Новый рекорд ходов: ${result.moves}.`);
-    }
+    updatedProfile.singleGamesPlayed = (updatedProfile.singleGamesPlayed || 0) + 1;
+    difficultyRecord.singleGames += 1;
+    difficultyRecord.totalSingleSeconds += result.seconds;
+    difficultyRecord.recentSingleSeconds = [
+      ...(difficultyRecord.recentSingleSeconds || []),
+      result.seconds
+    ].slice(-5);
 
     if (!difficultyRecord.bestTime || result.seconds < difficultyRecord.bestTime) {
       difficultyRecord.bestTime = result.seconds;
+      messages.push(`Новый рекорд времени на уровне ${difficulty}: ${formatTime(result.seconds)}.`);
     }
 
     if (!difficultyRecord.bestMoves || result.moves < difficultyRecord.bestMoves) {
       difficultyRecord.bestMoves = result.moves;
+      messages.push(`Новый рекорд ходов на уровне ${difficulty}: ${result.moves}.`);
     }
 
     updatedProfile.recordsByDifficulty[difficulty] = difficultyRecord;
@@ -111,45 +141,66 @@
     return { profile: updatedProfile, messages };
   }
 
-  function renderProfile(elements, profile = loadProfile()) {
+  function renderDifficultyRecords(profile) {
+    return ["Начинающий", "КМС", "Мастер", "Гроссмейстер"].map((difficulty) => {
+      const record = profile.recordsByDifficulty[difficulty] || {};
+      const recentSeconds = record.recentSingleSeconds || [];
+      const averageSeconds = record.singleGames
+        ? Math.round((record.totalSingleSeconds || 0) / record.singleGames)
+        : null;
+      const recentAverageSeconds = recentSeconds.length
+        ? Math.round(recentSeconds.reduce((sum, seconds) => sum + seconds, 0) / recentSeconds.length)
+        : null;
+
+      return `
+        <div class="profile-stat profile-stat-record">
+          <span>${difficulty}</span>
+          <strong>${record.singleGames || 0}</strong>
+          <small>Одиночных партий</small>
+          <small>Лучшее: ${formatTime(record.bestTime)} / ${record.bestMoves || "-"}</small>
+          <small>Среднее: ${formatTime(averageSeconds)}</small>
+          <small>Последние 5: ${formatTime(recentAverageSeconds)}</small>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderProfile(elements, profile = createBlankProfile()) {
     elements.name.value = profile.name;
     elements.country.value = profile.country;
-    elements.chessRating.value = profile.chessRating;
+
+    renderProfileStats(elements, profile);
+  }
+
+  function renderProfileStats(elements, profile = loadProfile()) {
+    if (!elements.stats) {
+      return;
+    }
 
     elements.stats.innerHTML = `
       <div class="profile-stat">
-        <span>Игровой рейтинг</span>
-        <strong>${profile.gameRating}</strong>
+        <span>Матчевый рейтинг</span>
+        <strong>${profile.matchRating || defaultProfile.matchRating}</strong>
       </div>
       <div class="profile-stat">
-        <span>Партий</span>
-        <strong>${profile.gamesPlayed}</strong>
+        <span>Матчи</span>
+        <strong>${profile.matchGamesPlayed || 0}</strong>
       </div>
       <div class="profile-stat">
-        <span>Лучшее время</span>
-        <strong>${formatTime(profile.bestTime)}</strong>
+        <span>Счет матчей</span>
+        <strong>${profile.twoPlayerWins || 0}-${profile.twoPlayerLosses || 0}</strong>
+        <small>Ничьи: ${profile.twoPlayerDraws || 0}</small>
       </div>
-      <div class="profile-stat">
-        <span>Лучшие ходы</span>
-        <strong>${profile.bestMoves || "-"}</strong>
-      </div>
-      <div class="profile-stat">
-        <span>Победы вдвоем</span>
-        <strong>${profile.twoPlayerWins}</strong>
-      </div>
+      ${renderDifficultyRecords(profile)}
     `;
   }
 
   function initProfile(elements) {
-    if (!elements.name || !elements.country || !elements.chessRating || !elements.stats || !elements.saveButton) {
+    if (!elements.name || !elements.country) {
       return;
     }
 
     renderProfile(elements);
-
-    elements.saveButton.addEventListener("click", () => {
-      saveProfileFromForm(elements);
-    });
   }
 
   function saveProfileFromForm(elements) {
@@ -162,8 +213,12 @@
   }
 
   window.ChessLegendsProfile = {
+    createBlankProfile,
+    hasSavedProfile,
+    loadProfile,
     initProfile,
     renderProfile,
+    renderProfileStats,
     saveProfileFromForm,
     updateProfileWithResult
   };

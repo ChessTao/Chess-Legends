@@ -39,7 +39,8 @@ body {
   display: none;
 }
 
-.setup {
+.setup,
+.profile {
   place-items: center;
   padding: clamp(14px, 3vw, 34px);
   overflow: auto;
@@ -100,6 +101,10 @@ h2 {
   gap: clamp(14px, 2vh, 20px);
 }
 
+.profile-page {
+  width: min(94vw, 860px);
+}
+
 .option-group {
   display: grid;
   gap: 10px;
@@ -114,11 +119,44 @@ h3 {
 
 .profile-panel {
   display: grid;
-  gap: 12px;
+  gap: 14px;
   padding: 14px;
   border: 1px solid rgba(255, 244, 222, 0.42);
   border-radius: 14px;
   background: rgba(16, 8, 6, 0.2);
+}
+
+.profile-choice,
+.setup-player {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.profile-choice {
+  justify-content: start;
+  padding: 6px;
+  border: 1px solid rgba(255, 244, 222, 0.42);
+  border-radius: 999px;
+  background: rgba(16, 8, 6, 0.24);
+}
+
+.setup-player {
+  align-items: center;
+  color: rgba(251, 241, 223, 0.8);
+  font-size: 0.95rem;
+}
+
+.player-flag {
+  width: 24px;
+  height: 16px;
+  margin-left: 2px;
+  border-radius: 2px;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px rgba(255, 244, 222, 0.42);
+  cursor: help;
+  vertical-align: -2px;
 }
 
 .profile-head {
@@ -126,6 +164,13 @@ h3 {
   justify-content: space-between;
   align-items: center;
   gap: 14px;
+}
+
+.profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: 8px;
 }
 
 .profile-subtitle {
@@ -136,7 +181,7 @@ h3 {
 
 .profile-form {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.9fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -168,7 +213,8 @@ h3 {
   outline-offset: 2px;
 }
 
-.profile-save {
+.profile-save,
+.profile-link {
   min-width: 112px;
   min-height: 36px;
   padding: 0 16px;
@@ -180,21 +226,60 @@ h3 {
   cursor: pointer;
 }
 
+.profile-link {
+  min-width: 92px;
+  color: var(--ink);
+  background: rgba(255, 247, 232, 0.08);
+}
+
+.profile-save:disabled,
+.profile-field input:disabled,
+.remember-profile input:disabled + span {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.remember-profile {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: fit-content;
+  color: rgba(251, 241, 223, 0.82);
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.remember-profile input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--ink);
+  cursor: pointer;
+}
+
+.account-form .profile-field input[readonly] {
+  cursor: default;
+  opacity: 0.78;
+}
+
 .profile-stats {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
 .profile-stat {
-  min-height: 58px;
+  min-height: 64px;
   display: grid;
   align-content: center;
-  gap: 4px;
-  padding: 9px 10px;
+  gap: 5px;
+  padding: 10px 12px;
   border: 1px solid rgba(255, 244, 222, 0.28);
   border-radius: 10px;
   background: rgba(255, 247, 232, 0.07);
+}
+
+.profile-stat-record {
+  min-height: 112px;
 }
 
 .profile-stat span {
@@ -210,6 +295,12 @@ h3 {
   line-height: 1;
 }
 
+.profile-stat small {
+  color: rgba(251, 241, 223, 0.76);
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
 .option-row,
 .difficulty-row {
   display: grid;
@@ -220,6 +311,7 @@ h3 {
 .option-card,
 .segment,
 .difficulty,
+.profile-mode,
 .play-button {
   font-family: Georgia, "Times New Roman", serif;
   cursor: pointer;
@@ -242,14 +334,16 @@ h3 {
 
 .option-card:hover,
 .segment:hover,
-.difficulty:hover {
+.difficulty:hover,
+.profile-mode:hover {
   border-color: rgba(255, 244, 222, 0.88);
   background: rgba(255, 247, 232, 0.14);
 }
 
 .option-card.is-selected,
 .segment.is-selected,
-.difficulty.is-selected {
+.difficulty.is-selected,
+.profile-mode.is-selected {
   border-color: rgba(255, 248, 232, 0.96);
   color: var(--walnut);
   background: var(--ink);
@@ -282,7 +376,8 @@ h3 {
 }
 
 .segment,
-.difficulty {
+.difficulty,
+.profile-mode {
   min-height: 40px;
   border: 1px solid transparent;
   border-radius: 999px;
@@ -291,6 +386,11 @@ h3 {
   font-size: 0.98rem;
   font-weight: 700;
   transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.profile-mode {
+  flex: 1 1 180px;
+  padding: 0 16px;
 }
 
 .difficulty {
@@ -702,12 +802,18 @@ h3 {
     justify-self: start;
   }
 
+  .profile-actions {
+    justify-content: start;
+  }
+
   .profile-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .segment,
-  .difficulty {
+  .difficulty,
+  .profile-mode,
+  .profile-choice {
     border-radius: 12px;
   }
 

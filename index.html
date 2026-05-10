@@ -23,41 +23,97 @@
         </div>
       </section>
 
+      <section class="profile screen" id="profileScreen" aria-label="Профиль игрока">
+        <div class="setup-panel profile-page">
+          <header class="setup-header">
+            <h2>Шахматные Легенды</h2>
+            <p class="setup-subtitle">Профиль игрока</p>
+          </header>
+
+          <section class="profile-panel" aria-labelledby="profileTitle">
+            <div class="profile-choice" aria-label="Тип входа">
+              <button class="profile-mode is-selected" type="button" data-value="profile" aria-pressed="true">Создать профиль</button>
+              <button class="profile-mode" type="button" data-value="guest" aria-pressed="false">Играть как гость</button>
+            </div>
+
+            <div class="profile-head">
+              <div>
+                <h3 id="profileTitle">Данные игрока</h3>
+                <p class="profile-subtitle" id="profileSubtitle">Рекорды сохраняются на этом устройстве</p>
+              </div>
+              <div class="profile-actions">
+                <button class="profile-save" id="loadSavedProfileButton" type="button">Войти как сохраненный игрок</button>
+              </div>
+            </div>
+
+            <div class="profile-form">
+              <label class="profile-field">
+                <span>Имя</span>
+                <input id="profileName" type="text" maxlength="24" autocomplete="name" placeholder="Игрок">
+              </label>
+              <label class="profile-field">
+                <span>Страна</span>
+                <input id="profileCountry" type="text" list="countryList" maxlength="64" autocomplete="country-name" placeholder="Выберите страну">
+                <datalist id="countryList"></datalist>
+              </label>
+            </div>
+
+            <label class="remember-profile">
+              <input id="rememberProfile" type="checkbox">
+              <span>Не выходить из аккаунта</span>
+            </label>
+          </section>
+
+          <button class="play-button" id="continueToSetupButton" type="button">ПРОДОЛЖИТЬ</button>
+        </div>
+      </section>
+
+      <section class="profile screen" id="accountScreen" aria-label="Аккаунт игрока">
+        <div class="setup-panel profile-page">
+          <header class="setup-header">
+            <h2>Шахматные Легенды</h2>
+            <p class="setup-subtitle">Аккаунт игрока</p>
+          </header>
+
+          <section class="profile-panel" aria-labelledby="accountTitle">
+            <div class="profile-head">
+              <div>
+                <h3 id="accountTitle">Мой профиль</h3>
+                <p class="profile-subtitle">Данные игрока и рекорды по сложностям</p>
+              </div>
+            </div>
+
+            <div class="profile-form account-form">
+              <label class="profile-field">
+                <span>Имя</span>
+                <input id="accountName" type="text" readonly>
+              </label>
+              <label class="profile-field">
+                <span>Страна</span>
+                <input id="accountCountry" type="text" list="countryList" maxlength="64" autocomplete="country-name" placeholder="Выберите страну">
+              </label>
+            </div>
+
+            <div class="profile-stats" id="accountStats" aria-live="polite"></div>
+          </section>
+
+          <button class="play-button" id="backToSetupFromAccountButton" type="button">ВЕРНУТЬСЯ</button>
+        </div>
+      </section>
+
       <section class="setup screen" id="setupScreen" aria-label="Настройка игры">
         <div class="setup-panel">
           <header class="setup-header">
             <h2>Шахматные Легенды</h2>
             <p class="setup-subtitle">Выберите игру</p>
+            <div class="setup-player">
+              <span id="currentPlayerLabel">Игрок: Игрок</span>
+              <button class="profile-link" id="backToProfileButton" type="button">Профиль</button>
+              <button class="profile-link" id="logoutProfileButton" type="button">Выйти</button>
+            </div>
           </header>
 
           <div class="setup-grid">
-            <section class="profile-panel" aria-labelledby="profileTitle">
-              <div class="profile-head">
-                <div>
-                  <h3 id="profileTitle">Профиль игрока</h3>
-                  <p class="profile-subtitle">Рекорды сохраняются на этом устройстве</p>
-                </div>
-                <button class="profile-save" id="profileSaveButton" type="button">Сохранить</button>
-              </div>
-
-              <div class="profile-form">
-                <label class="profile-field">
-                  <span>Имя</span>
-                  <input id="profileName" type="text" maxlength="24" autocomplete="name" placeholder="Игрок">
-                </label>
-                <label class="profile-field">
-                  <span>Страна</span>
-                  <input id="profileCountry" type="text" maxlength="24" autocomplete="country-name" placeholder="Страна">
-                </label>
-                <label class="profile-field">
-                  <span>Шахматный рейтинг</span>
-                  <input id="profileChessRating" type="number" min="0" max="3500" step="1" inputmode="numeric" placeholder="1200">
-                </label>
-              </div>
-
-              <div class="profile-stats" id="profileStats" aria-live="polite"></div>
-            </section>
-
             <section class="option-group" aria-labelledby="cardTypeTitle">
               <h3 id="cardTypeTitle">Тип карточек</h3>
               <div class="option-row">
