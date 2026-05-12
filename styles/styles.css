@@ -26,6 +26,25 @@ body {
   min-height: 100vh;
 }
 
+.photo-credits-link {
+  position: fixed;
+  right: 14px;
+  bottom: 12px;
+  z-index: 30;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 244, 222, 0.42);
+  border-radius: 999px;
+  color: rgba(251, 241, 223, 0.82);
+  background: rgba(16, 8, 6, 0.46);
+  font-size: 0.78rem;
+  text-decoration: none;
+}
+
+.photo-credits-link:hover {
+  color: #fff7e8;
+  border-color: rgba(255, 244, 222, 0.72);
+}
+
 .screen {
   min-height: 100vh;
   display: none;

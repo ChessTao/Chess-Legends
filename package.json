@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "check": "node --check server.js && node --check data/data.js && node --check src/screens.js && node --check src/setup.js && node --check src/profile.js && node --check src/game-preview.js && node --check src/intro.js && node --check src/script.js"
   },
   "private": true
 }
