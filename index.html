@@ -31,14 +31,13 @@
       <section class="profile screen" id="profileScreen" aria-label="Профиль игрока">
         <div class="setup-panel profile-page">
           <header class="setup-header">
-            <h2>Шахматные Легенды</h2>
-            <p class="setup-subtitle">Профиль игрока</p>
+            <h2 class="profile-logo">Шахматные Легенды</h2>
           </header>
 
           <section class="profile-panel" aria-labelledby="profileTitle">
             <div class="profile-choice" aria-label="Тип входа">
-              <button class="profile-mode is-selected" type="button" data-value="profile" aria-pressed="true">Создать профиль</button>
-              <button class="profile-mode" type="button" data-value="guest" aria-pressed="false">Играть как гость</button>
+              <button class="profile-mode" id="loginProfileButton" type="button" data-value="login">Войти</button>
+              <button class="profile-mode is-selected" id="registerProfileButton" type="button" data-value="register">Зарегистрироваться</button>
             </div>
 
             <div class="profile-head">
@@ -46,19 +45,17 @@
                 <h3 id="profileTitle">Данные игрока</h3>
                 <p class="profile-subtitle" id="profileSubtitle">Рекорды сохраняются на этом устройстве</p>
               </div>
-              <div class="profile-actions">
-                <button class="profile-save" id="loadSavedProfileButton" type="button">Войти как сохраненный игрок</button>
-              </div>
             </div>
 
             <div class="profile-form">
               <label class="profile-field">
                 <span>Имя</span>
-                <input id="profileName" type="text" maxlength="24" autocomplete="name" placeholder="Игрок">
+                <input id="profileName" type="text" maxlength="24" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" readonly placeholder="Игрок">
+                <div class="profile-name-list" id="profileNameList" hidden></div>
               </label>
               <label class="profile-field">
                 <span>Страна</span>
-                <input id="profileCountry" type="text" list="countryList" maxlength="64" autocomplete="country-name" placeholder="Выберите страну">
+                <input id="profileCountry" type="text" list="countryList" maxlength="64" autocomplete="new-password" placeholder="Выберите страну">
                 <datalist id="countryList"></datalist>
               </label>
             </div>
@@ -67,16 +64,18 @@
               <input id="rememberProfile" type="checkbox">
               <span>Не выходить из аккаунта</span>
             </label>
-          </section>
 
-          <button class="play-button" id="continueToSetupButton" type="button">ПРОДОЛЖИТЬ</button>
+            <div class="profile-form-actions">
+              <button class="profile-save" id="confirmLoginButton" type="button" hidden>ВОЙТИ</button>
+            </div>
+          </section>
         </div>
       </section>
 
       <section class="profile screen" id="accountScreen" aria-label="Аккаунт игрока">
         <div class="setup-panel profile-page">
           <header class="setup-header">
-            <h2>Шахматные Легенды</h2>
+            <h2 class="profile-logo">Шахматные Легенды</h2>
             <p class="setup-subtitle">Аккаунт игрока</p>
           </header>
 
@@ -85,9 +84,6 @@
               <div>
                 <h3 id="accountTitle">Мой профиль</h3>
                 <p class="profile-subtitle">Данные игрока и рекорды по сложностям</p>
-              </div>
-              <div class="profile-actions">
-                <button class="profile-link" id="resetProfileStatsButton" type="button">Обнулить статистику</button>
               </div>
             </div>
 
@@ -98,7 +94,7 @@
               </label>
               <label class="profile-field">
                 <span>Страна</span>
-                <input id="accountCountry" type="text" list="countryList" maxlength="64" autocomplete="country-name" placeholder="Выберите страну">
+                <input id="accountCountry" type="text" list="countryList" maxlength="64" autocomplete="new-password" placeholder="Выберите страну">
               </label>
             </div>
 
@@ -112,7 +108,7 @@
       <section class="setup screen" id="setupScreen" aria-label="Настройка игры">
         <div class="setup-panel">
           <header class="setup-header">
-            <h2>Шахматные Легенды</h2>
+            <h2 class="profile-logo">Шахматные Легенды</h2>
             <p class="setup-subtitle">Выберите игру</p>
             <div class="setup-player">
               <span id="currentPlayerLabel">Игрок: Игрок</span>
@@ -149,31 +145,14 @@
               <div class="match-player-grid">
                 <label class="profile-field">
                   <span>Игрок 1</span>
-                  <select id="matchPlayer1Select"></select>
+                  <select id="matchPlayer1Select" disabled></select>
                 </label>
-                <button class="profile-link match-create" id="createMatchPlayer1Button" type="button">Создать</button>
                 <label class="profile-field">
                   <span>Игрок 2</span>
                   <select id="matchPlayer2Select"></select>
                 </label>
-                <button class="profile-link match-create" id="createMatchPlayer2Button" type="button">Создать</button>
               </div>
               <p class="match-player-note" id="matchPlayersNotice" aria-live="polite"></p>
-              <form class="match-player-form" id="matchPlayerCreateForm" hidden>
-                <label class="profile-field">
-                  <span>Имя</span>
-                  <input id="matchPlayerName" type="text" maxlength="40" autocomplete="off" placeholder="Имя игрока">
-                </label>
-                <label class="profile-field">
-                  <span>Страна</span>
-                  <input id="matchPlayerCountry" type="text" list="countryList" maxlength="64" autocomplete="country-name" placeholder="Выберите страну">
-                </label>
-                <div class="match-player-actions">
-                  <button class="profile-save" id="saveMatchPlayerButton" type="submit">Создать игрока</button>
-                  <button class="profile-link" id="cancelMatchPlayerButton" type="button">Отмена</button>
-                </div>
-                <p class="match-player-error" id="matchPlayerCreateError" aria-live="polite"></p>
-              </form>
             </section>
 
             <section class="option-group" aria-labelledby="difficultyTitle">
@@ -232,22 +211,14 @@
         </div>
       </section>
 
-      <section class="project-info" aria-labelledby="projectInfoTitle">
-        <div class="project-info-inner">
-          <section class="info-block info-block-wide">
-            <h2 id="projectInfoTitle">Добро пожаловать в «Шахматные Легенды»</h2>
-            <p>
-              Это образовательная игра на память о великих шахматистах. Она знакомит с чемпионами мира и выдающимися игроками,
-              чьи партии и идеи стали частью истории шахмат.
-            </p>
-            <p>
-              В игре нужно находить пары карточек: две одинаковые фотографии или фотографию и фамилию шахматиста, в зависимости
-              от выбранного режима. Такой формат помогает запоминать имена, лица и основные фигуры шахматной истории легко и в игровом темпе.
-            </p>
-          </section>
+      <section class="info-page screen" id="infoScreen" aria-labelledby="infoPageTitle">
+        <div class="setup-panel info-page-panel">
+          <header class="setup-header">
+            <h2 class="profile-logo">Шахматные Легенды</h2>
+            <p class="setup-subtitle" id="infoPageTitle">Правила и условия</p>
+          </header>
 
-          <section class="info-block" aria-labelledby="rulesTitle">
-            <h3 id="rulesTitle">Правила игры</h3>
+          <article class="info-article" id="rulesInfo" data-info-page="rules" data-title="Правила игры" hidden>
             <p><strong>Цель:</strong> найти все пары карточек за как можно меньше ходов.</p>
             <p><strong>Пара:</strong> две одинаковые фотографии или фотография и фамилия одного шахматиста.</p>
             <ol>
@@ -257,28 +228,80 @@
               <li>Если карточки не совпали, они снова закрываются.</li>
               <li>Игра продолжается, пока не будут найдены все пары.</li>
             </ol>
-            <p>
-              В режиме для двух игроков участники ходят по очереди. Побеждает тот, кто соберет больше пар.
-            </p>
-          </section>
+            <p>В режиме для двух игроков участники ходят по очереди. Побеждает тот, кто соберет больше пар.</p>
+          </article>
 
-          <section class="info-block" aria-labelledby="photoUseTitle">
-            <h3 id="photoUseTitle">Фотографии и лицензии</h3>
+          <article class="info-article" id="biographiesInfo" data-info-page="biographies" data-title="Биографии легенд" hidden>
             <p>
-              Фотографии шахматистов взяты с Wikimedia Commons. В проекте используются локальные уменьшенные копии изображений,
-              подготовленные для карточек игры.
+              Здесь позже появятся краткие биографии шахматистов: главные партии, титулы,
+              стиль игры и интересные факты.
+            </p>
+          </article>
+
+          <article class="info-article" id="photoUseInfo" data-info-page="photo-use" data-title="Условия использования фото" hidden>
+            <p>
+              В игре используются фотографии шахматистов из открытых источников Wikimedia Commons.
+              Изображения уменьшены и подготовлены только для показа на карточках игры.
             </p>
             <p>
-              Авторы, источники исходных файлов и лицензии указаны в
-              <a href="PHOTO_CREDITS.md" target="_blank" rel="license noopener">разделе «Авторы фото»</a>.
-              Этот файл должен публиковаться вместе с сайтом.
+              Для каждого изображения сохранены сведения об авторе, источнике и лицензии.
+              Эти данные можно посмотреть в разделе «Авторы фото».
             </p>
             <p>
-              Public domain и CC0 можно использовать свободно. CC BY и CC BY-SA требуют указания автора, источника и лицензии;
-              измененные версии фотографий должны соблюдать условия соответствующей лицензии.
+              Если вы хотите использовать фотографии отдельно от этой игры, проверьте условия конкретной лицензии на странице источника.
             </p>
-          </section>
+          </article>
+
+          <article class="info-article" id="photoCreditsInfo" data-info-page="photo-credits" data-title="Авторы фото" hidden>
+            <p>
+              Фотографии взяты с Wikimedia Commons. Ниже указаны авторы или источники исходных файлов
+              и лицензии, по которым эти изображения используются в игре.
+            </p>
+            <div class="credits-list" aria-label="Список авторов фотографий">
+              <div class="credit-item"><strong>Вильгельм Стейниц</strong><span>Fritz Schumann; Cleveland Public Library / DPLA</span><small>Public domain</small></div>
+              <div class="credit-item"><strong>Эмануил Ласкер</strong><span>Unknown author; German Federal Archive</span><small>CC BY-SA 3.0 DE</small></div>
+              <div class="credit-item"><strong>Хосе Рауль Капабланка</strong><span>Anonymous / Keystone-France</span><small>Public domain</small></div>
+              <div class="credit-item"><strong>Александр Алехин</strong><span>George Grantham Bain Collection; derivative work by JesusAngelRey</span><small>Public domain</small></div>
+              <div class="credit-item"><strong>Макс Эйве</strong><span>Anefo / R. Mieremet; Dutch National Archives</span><small>CC BY-SA 3.0 NL</small></div>
+              <div class="credit-item"><strong>Михаил Ботвинник</strong><span>Harry Pot / Anefo; Dutch National Archives</span><small>CC BY-SA 3.0 NL</small></div>
+              <div class="credit-item"><strong>Василий Смыслов</strong><span>Koen Suyk / Anefo</span><small>CC0</small></div>
+              <div class="credit-item"><strong>Михаил Таль</strong><span>Rob C. Croes / Anefo; Dutch National Archives</span><small>CC BY-SA 3.0 NL</small></div>
+              <div class="credit-item"><strong>Тигран Петросян</strong><span>Harry Pot / Anefo; Nationaal Archief</span><small>CC0</small></div>
+              <div class="credit-item"><strong>Борис Спасский</strong><span>Rob Bogaerts / Anefo</span><small>CC0</small></div>
+              <div class="credit-item"><strong>Бобби Фишер</strong><span>Ulrich Kohls / German Federal Archive; color derivative by Karpouzi</span><small>CC BY-SA 3.0</small></div>
+              <div class="credit-item"><strong>Анатолий Карпов</strong><span>Veni Markovski</span><small>CC BY-SA 4.0</small></div>
+              <div class="credit-item"><strong>Гарри Каспаров</strong><span>Lukasz Kobus / European Union</span><small>CC BY 4.0</small></div>
+              <div class="credit-item"><strong>Владимир Крамник</strong><span>Vladimir Barskij / ruchess.ru</span><small>CC BY-SA 3.0</small></div>
+              <div class="credit-item"><strong>Вишванатан Ананд</strong><span>Wolfgang Jekel</span><small>CC BY 2.0</small></div>
+              <div class="credit-item"><strong>Магнус Карлсен</strong><span>Andreas Kontokanis</span><small>CC BY-SA 2.0</small></div>
+              <div class="credit-item"><strong>Дин Лижэнь</strong><span>Stefan64</span><small>CC BY-SA 3.0</small></div>
+              <div class="credit-item"><strong>Пол Морфи</strong><span>Wikimedia Commons source</span><small>Public domain</small></div>
+              <div class="credit-item"><strong>Адольф Андерсен</strong><span>Cleveland Public Library / DPLA</span><small>Public domain</small></div>
+              <div class="credit-item"><strong>Акиба Рубинштейн</strong><span>Unknown author; Deutsche Schachzeitung, January 1908</span><small>Public domain</small></div>
+              <div class="credit-item"><strong>Давид Бронштейн</strong><span>Joop van Bilsen / Anefo</span><small>CC0</small></div>
+              <div class="credit-item"><strong>Пауль Керес</strong><span>Unknown photographer; scanned from Valter Heuer, "Meie Keres"</span><small>Public domain</small></div>
+              <div class="credit-item"><strong>Виктор Корчной</strong><span>Bert Verhoeff / Anefo</span><small>CC0</small></div>
+              <div class="credit-item"><strong>Василий Иванчук</strong><span>GibChess</span><small>CC BY 3.0</small></div>
+              <div class="credit-item"><strong>Веселин Топалов</strong><span>Stefan64</span><small>CC BY-SA 3.0</small></div>
+              <div class="credit-item"><strong>Пётр Свидлер</strong><span>Stefan64</span><small>CC BY-SA 4.0</small></div>
+              <div class="credit-item"><strong>Юдит Полгар</strong><span>Przemyslaw Jahr / Wikimedia Commons</span><small>CC BY-SA 3.0</small></div>
+              <div class="credit-item"><strong>Левон Аронян</strong><span>Stefan64</span><small>CC BY-SA 3.0</small></div>
+              <div class="credit-item"><strong>Шахрияр Мамедьяров</strong><span>Etery Kublashvili / ruchess.ru</span><small>CC BY-SA 3.0</small></div>
+              <div class="credit-item"><strong>Хикару Накамура</strong><span>Andreas Kontokanis; cropped derivative</span><small>CC BY-SA 2.0</small></div>
+              <div class="credit-item"><strong>Фабиано Каруана</strong><span>Frans Peeters</span><small>CC BY-SA 2.0</small></div>
+              <div class="credit-item"><strong>Ян Непомнящий</strong><span>Frans Peeters</span><small>CC BY-SA 2.0</small></div>
+            </div>
+          </article>
+
+          <button class="play-button" id="backFromInfoButton" type="button">НАЗАД</button>
         </div>
+      </section>
+
+      <section class="project-links" aria-label="Правила и условия использования">
+        <a href="#rules" data-info-page="rules">Правила игры</a>
+        <a href="#biographies" data-info-page="biographies">Биографии легенд</a>
+        <a href="#photo-use" data-info-page="photo-use">Условия использования фото</a>
+        <a href="#photo-credits" data-info-page="photo-credits">Авторы фото</a>
       </section>
     </main>
 

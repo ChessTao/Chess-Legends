@@ -1,6 +1,8 @@
 ﻿(() => {
   let state = null;
   let timerId = null;
+  let nextMatchStartingPlayer = 0;
+  let matchStartingKey = "";
 
   function formatTime(totalSeconds) {
     const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
@@ -287,6 +289,32 @@
     resultPanel.setAttribute("aria-hidden", "true");
   }
 
+  function getMatchStartingKey(settings, matchPlayers) {
+    if (settings.mode !== "Два игрока" || !matchPlayers) {
+      return "";
+    }
+
+    return `${matchPlayers.player1Id || ""}:${matchPlayers.player2Id || ""}`;
+  }
+
+  function getStartingPlayer(settings, matchPlayers) {
+    const startingKey = getMatchStartingKey(settings, matchPlayers);
+
+    if (!startingKey) {
+      return 0;
+    }
+
+    if (startingKey !== matchStartingKey) {
+      matchStartingKey = startingKey;
+      nextMatchStartingPlayer = 0;
+    }
+
+    const startingPlayer = nextMatchStartingPlayer;
+    nextMatchStartingPlayer = nextMatchStartingPlayer === 0 ? 1 : 0;
+
+    return startingPlayer;
+  }
+
   function renderGamePreview(options) {
     const {
       settings,
@@ -341,7 +369,7 @@
       matchedPairs: 0,
       moves: 0,
       seconds: 0,
-      currentPlayer: 0,
+      currentPlayer: getStartingPlayer(settings, matchPlayers),
       scores: [0, 0],
       isLocked: false,
       isComplete: false

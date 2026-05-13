@@ -115,6 +115,30 @@
     return listProfiles().find((profile) => profile.id === profileId) || null;
   }
 
+  function removeProfiles(matcher) {
+    const profiles = listProfiles();
+    const filteredProfiles = profiles.filter((profile) => !matcher(profile));
+    const activeProfileId = getActiveProfileId();
+
+    if (filteredProfiles.length === profiles.length) {
+      return filteredProfiles;
+    }
+
+    writeProfiles(filteredProfiles);
+
+    if (activeProfileId && !filteredProfiles.some((profile) => profile.id === activeProfileId)) {
+      if (filteredProfiles[0]) {
+        setActiveProfile(filteredProfiles[0].id);
+        localStorage.setItem(LEGACY_STORAGE_KEY, JSON.stringify(filteredProfiles[0]));
+      } else {
+        localStorage.removeItem(ACTIVE_PROFILE_ID_KEY);
+        localStorage.removeItem(LEGACY_STORAGE_KEY);
+      }
+    }
+
+    return filteredProfiles;
+  }
+
   function loadProfile() {
     const profiles = listProfiles();
     const activeProfile = getProfile(getActiveProfileId());
@@ -462,6 +486,7 @@
     recordMatchResult,
     recordProfileResult,
     recordSingleResult,
+    removeProfiles,
     renderProfile,
     renderProfileStats,
     resetSinglePlayerStats,
