@@ -17,6 +17,7 @@
     { surname: "Ананд", photo: "assets/photos/commons/15-anand.jpeg" },
     { surname: "Карлсен", photo: "assets/photos/commons/16-carlsen.jpg" },
     { surname: "Дин Лижень", photo: "assets/photos/commons/17-ding-liren.jpg" },
+    { surname: "Гукеш", photo: "assets/photos/commons/18-gukesh.jpg" },
     { surname: "Морфи", photo: "assets/photos/commons/18-morphy.jpg" },
     { surname: "Андерсен", photo: "assets/photos/commons/19-anderssen.jpg" },
     { surname: "Рубинштейн", photo: "assets/photos/commons/20-rubinstein.png" },
@@ -28,7 +29,6 @@
     { surname: "Свидлер", photo: "assets/photos/commons/26-svidler.jpg" },
     { surname: "Полгар", photo: "assets/photos/commons/27-polgar.jpg" },
     { surname: "Аронян", photo: "assets/photos/commons/28-aronian.jpg" },
-    { surname: "Мамедьяров", photo: "assets/photos/commons/29-mamedyarov.jpg" },
     { surname: "Накамура", photo: "assets/photos/commons/30-nakamura.jpg" },
     { surname: "Каруана", photo: "assets/photos/commons/31-caruana.jpg" },
     { surname: "Непомнящий", photo: "assets/photos/commons/32-nepomniachtchi.jpg" }

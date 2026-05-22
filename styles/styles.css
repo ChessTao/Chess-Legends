@@ -11,24 +11,34 @@
   box-sizing: border-box;
 }
 
+html {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   margin: 0;
-  min-height: 100vh;
+  height: 100%;
+  min-height: 100dvh;
   color: var(--ink);
   font-family: Georgia, "Times New Roman", serif;
   background:
     radial-gradient(circle at 22% 18%, rgba(255, 231, 190, 0.12), transparent 26rem),
     linear-gradient(135deg, #2b1514 0%, var(--walnut) 42%, var(--mahogany) 100%);
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 .app {
-  min-height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .screen {
-  min-height: 100vh;
+  height: 100dvh;
+  min-height: 0;
   display: none;
+  overflow: hidden;
 }
 
 .screen.is-active {
@@ -43,12 +53,13 @@ body {
 .profile {
   place-items: center;
   padding: clamp(14px, 3vw, 34px);
-  overflow: auto;
+  overflow: hidden;
 }
 
 .setup-panel {
   width: min(94vw, 980px);
-  max-height: calc(100vh - clamp(28px, 6vw, 68px));
+  height: min-content;
+  max-height: calc(100dvh - clamp(28px, 6vw, 68px));
   display: grid;
   grid-template-rows: auto 1fr auto;
   gap: clamp(14px, 2.2vh, 24px);
@@ -59,7 +70,7 @@ body {
     linear-gradient(135deg, rgba(255, 248, 232, 0.12), rgba(42, 19, 15, 0.64)),
     rgba(32, 16, 13, 0.62);
   box-shadow: 0 28px 90px var(--shadow);
-  overflow: auto;
+  overflow: hidden;
   opacity: 0;
   transform: translateY(18px) scale(0.98);
   animation: setupIn 560ms ease-out forwards;
@@ -118,6 +129,8 @@ h2 {
 .setup-grid {
   display: grid;
   gap: clamp(14px, 2vh, 20px);
+  min-height: 0;
+  overflow: hidden;
 }
 
 .profile-page {
@@ -125,7 +138,13 @@ h2 {
 }
 
 #profileScreen .profile-page {
-  max-height: none;
+  max-height: calc(100dvh - clamp(28px, 6vw, 68px));
+  overflow: visible;
+}
+
+#profileScreen .setup-panel,
+#profileScreen .profile-panel,
+#profileScreen .profile-form {
   overflow: visible;
 }
 
@@ -253,8 +272,8 @@ h3 {
   top: calc(100% + 4px);
   left: 0;
   right: 0;
-  z-index: 20;
-  max-height: 230px;
+  z-index: 100;
+  max-height: min(230px, 34dvh);
   overflow: auto;
   padding: 6px;
   border: 1px solid rgba(255, 244, 222, 0.58);
@@ -379,6 +398,18 @@ h3 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
+  min-height: 0;
+}
+
+#accountScreen .profile-panel {
+  min-height: 0;
+  overflow: hidden;
+}
+
+#accountScreen .profile-stats {
+  max-height: min(44dvh, 430px);
+  overflow: auto;
+  padding-right: 4px;
 }
 
 .profile-stat {
@@ -573,7 +604,7 @@ h3 {
 .game-shell {
   position: relative;
   width: min(98vw, 1280px);
-  height: calc(100vh - clamp(16px, 2.8vw, 36px));
+  height: calc(100dvh - clamp(16px, 2.8vw, 36px));
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr);
   gap: clamp(5px, 0.8vh, 10px);
@@ -694,7 +725,7 @@ h3 {
 }
 
 .memory-board[data-columns="8"][data-rows="8"] {
-  width: min(100%, 74vh, 1020px);
+  width: min(100%, 68dvh, 980px);
 }
 
 .memory-board[data-columns="12"][data-rows="6"] {
@@ -874,11 +905,44 @@ h3 {
 .info-page {
   place-items: center;
   padding: clamp(14px, 3vw, 34px);
-  overflow: auto;
+  overflow: hidden;
 }
 
 .info-page-panel {
   width: min(94vw, 900px);
+}
+
+.info-page.is-biographies {
+  padding: clamp(8px, 1.5vw, 16px);
+  overflow: hidden;
+}
+
+.info-page.is-biographies .info-page-panel {
+  width: min(98vw, 1180px);
+  height: calc(100dvh - clamp(16px, 3vw, 32px));
+  max-height: none;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: clamp(8px, 1.4vh, 14px);
+  padding: clamp(10px, 1.8vw, 18px);
+  overflow: hidden;
+}
+
+.info-page.is-biographies .setup-header {
+  gap: 2px;
+}
+
+.info-page.is-biographies .profile-logo {
+  font-size: clamp(1.8rem, 4vw, 3rem);
+}
+
+.info-page.is-biographies .setup-subtitle {
+  font-size: clamp(1.2rem, 2.7vw, 2rem);
+}
+
+.info-page.is-biographies .info-article {
+  min-height: 0;
+  padding: clamp(8px, 1.2vw, 12px);
+  overflow: hidden;
 }
 
 .info-article {
@@ -896,8 +960,10 @@ h3 {
 }
 
 .info-article h3,
+.info-article h4,
 .info-article p,
-.info-article ol {
+.info-article ol,
+.info-article ul {
   margin: 0;
 }
 
@@ -906,13 +972,19 @@ h3 {
   font-size: clamp(1.35rem, 3vw, 2rem);
 }
 
+.info-article h4 {
+  color: #ffe0a6;
+  font-size: 1.05rem;
+}
+
 .info-article p,
 .info-article li {
   font-size: 1rem;
   line-height: 1.45;
 }
 
-.info-article ol {
+.info-article ol,
+.info-article ul {
   display: grid;
   gap: 6px;
   padding-left: 1.25rem;
@@ -921,6 +993,101 @@ h3 {
 .info-article a {
   color: #ffe0a6;
   text-underline-offset: 3px;
+}
+
+.biography-layout {
+  display: grid;
+  gap: 16px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.biography-list {
+  align-self: center;
+  justify-self: center;
+  width: min(100%, calc((100dvh - 230px) * 2), 1120px);
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: clamp(5px, 0.85vw, 10px);
+  overflow: visible;
+  padding: 0;
+}
+
+.biography-list[hidden],
+.biography-reader[hidden] {
+  display: none;
+}
+
+.biography-card {
+  position: relative;
+  display: grid;
+  place-items: stretch;
+  aspect-ratio: 1;
+  min-height: 0;
+  padding: 0;
+  border: 1px solid rgba(255, 244, 222, 0.58);
+  border-radius: 12px;
+  color: var(--walnut);
+  background: var(--ink);
+  font: 700 clamp(0.58rem, 0.9vw, 0.78rem)/1 Georgia, "Times New Roman", serif;
+  text-align: center;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 8px 18px rgba(14, 7, 5, 0.16);
+}
+
+.biography-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 18%;
+}
+
+.biography-card span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  min-height: 24px;
+  display: grid;
+  place-items: center;
+  padding: 4px 5px;
+  color: var(--walnut);
+  background: rgba(251, 241, 223, 0.88);
+  overflow-wrap: anywhere;
+}
+
+.biography-card:hover,
+.biography-card:focus {
+  border-color: rgba(255, 248, 232, 0.96);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 232, 174, 0.26);
+}
+
+.biography-reader {
+  display: grid;
+  gap: 12px;
+  max-height: min(58vh, 620px);
+  overflow: auto;
+  padding: 2px 8px 2px 0;
+}
+
+.biography-back {
+  justify-self: start;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 224, 166, 0.82);
+  border-radius: 8px;
+  color: #fff7e8;
+  background: rgba(255, 224, 166, 0.12);
+  font: 700 0.9rem/1 Georgia, "Times New Roman", serif;
+  cursor: pointer;
+}
+
+.biography-back:hover,
+.biography-back:focus {
+  outline: none;
+  background: rgba(255, 224, 166, 0.2);
 }
 
 .credits-list {
@@ -999,7 +1166,44 @@ h3 {
   background: rgba(255, 247, 232, 0.1);
 }
 
+@media (min-width: 900px) {
+  .game.screen.is-active {
+    padding-left: clamp(210px, 13vw, 250px);
+  }
+
+  .game.screen.is-active .game-shell {
+    width: min(100%, 1280px);
+  }
+
+  .game.screen.is-active ~ .project-links,
+  .setup.screen.is-active ~ .project-links,
+  .profile.screen.is-active ~ .project-links {
+    left: clamp(12px, 1.4vw, 22px);
+    width: clamp(142px, 10.5vw, 168px);
+    gap: 8px;
+  }
+
+  .game.screen.is-active ~ .project-links a,
+  .setup.screen.is-active ~ .project-links a,
+  .profile.screen.is-active ~ .project-links a {
+    min-height: 32px;
+    padding: 0 10px;
+    font-size: 0.84rem;
+    line-height: 1.05;
+  }
+}
+
+@media (max-width: 899px) {
+  .game.screen.is-active ~ .project-links {
+    display: none;
+  }
+}
+
 .intro.screen.is-active ~ .project-links {
+  display: none;
+}
+
+.info-page.screen.is-active ~ .project-links {
   display: none;
 }
 
@@ -1039,6 +1243,15 @@ h3 {
     display: grid;
   }
 
+  .biography-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .biography-list,
+  .biography-reader {
+    max-height: none;
+  }
+
   .profile-save {
     justify-self: start;
   }
@@ -1067,13 +1280,96 @@ h3 {
   }
 
   .project-links {
-    position: static;
+    position: fixed;
+    top: auto;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    left: 50%;
     width: min(94vw, 980px);
     flex-flow: row wrap;
     justify-content: center;
-    margin: 0 auto;
-    padding: 0 clamp(14px, 3vw, 34px) clamp(28px, 5vw, 48px);
-    transform: none;
+    margin: 0;
+    padding: 0;
+    transform: translateX(-50%);
   }
 
+  .setup,
+  .profile,
+  .info-page {
+    padding-bottom: clamp(74px, 18vh, 112px);
+  }
+
+  .intro.screen.is-active ~ .project-links,
+  .info-page.screen.is-active ~ .project-links {
+    display: none;
+  }
+
+}
+
+@media (max-height: 700px) and (min-width: 900px) {
+  .game-shell {
+    gap: 5px;
+    padding: 8px;
+  }
+
+  .game-header {
+    gap: 10px;
+  }
+
+  .game-title {
+    font-size: clamp(1.25rem, 2.3vw, 1.85rem);
+  }
+
+  .game-choice {
+    font-size: 0.78rem;
+  }
+
+  .back-button {
+    min-height: 30px;
+    padding: 0 14px;
+    font-size: 0.86rem;
+  }
+
+  .score-panel {
+    gap: 6px;
+  }
+
+  .score-card {
+    min-height: 30px;
+    gap: 1px;
+    padding: 5px 9px;
+  }
+
+  .score-card strong {
+    font-size: 1rem;
+  }
+
+  .memory-board[data-columns="8"][data-rows="8"] {
+    width: min(100%, 62dvh, 900px);
+  }
+
+  .info-page.is-biographies .profile-logo {
+    font-size: clamp(1.45rem, 3.2vw, 2.35rem);
+  }
+
+  .info-page.is-biographies .setup-subtitle {
+    font-size: clamp(1rem, 2.2vw, 1.55rem);
+  }
+
+  .info-page.is-biographies .info-article {
+    padding: 8px;
+  }
+
+  .biography-list {
+    width: min(100%, calc((100dvh - 180px) * 2), 1120px);
+  }
+
+  .biography-card {
+    border-radius: 10px;
+  }
+
+  .biography-card span {
+    min-height: 20px;
+    padding: 3px 4px;
+    font-size: clamp(0.52rem, 0.82vw, 0.68rem);
+  }
 }

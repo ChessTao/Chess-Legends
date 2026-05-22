@@ -20,7 +20,8 @@
 | Владимир Крамник | `14-kramnik.jpg` | [Vladimir Kramnik 2, Candidates Tournament 2018.jpg](https://commons.wikimedia.org/wiki/File:Vladimir_Kramnik_2,_Candidates_Tournament_2018.jpg) | Vladimir Barskij / ruchess.ru | CC BY-SA 3.0 |
 | Вишванатан Ананд | `15-anand.jpeg` | [Viswanathan Anand (2016).jpeg](https://commons.wikimedia.org/wiki/File:Viswanathan_Anand_(2016).jpeg) | Wolfgang Jekel | CC BY 2.0 |
 | Магнус Карлсен | `16-carlsen.jpg` | [Carlsen Magnus (30238051906).jpg](https://commons.wikimedia.org/wiki/File:Carlsen_Magnus_(30238051906).jpg) | Andreas Kontokanis | CC BY-SA 2.0 |
-| Дин Лижэнь | `17-ding-liren.jpg` | [DingLiren24a.jpg](https://commons.wikimedia.org/wiki/File:DingLiren24a.jpg) | Stefan64 | CC BY-SA 3.0 |
+| Дин Лижэнь | 17-ding-liren.jpg | DingLiren24a.jpg | Stefan64 | CC BY-SA 3.0 |
+| Гукеш Доммараджу | 18-gukesh.jpg | Локальный файл D:\Chess Cards\Gukesh.jpg | Файл из набора Chess Cards | Проверьте лицензию перед публикацией |
 | Пол Морфи | `18-morphy.jpg` | [PaulMorphy.jpg](https://commons.wikimedia.org/wiki/File:PaulMorphy.jpg) | Wikimedia Commons source | Public domain |
 | Адольф Андерсен | `19-anderssen.jpg` | [Anderssen, Adolf "-5" - DPLA - 9ca464339f18b3d8be87fccc68c3ee73 (cropped).jpg](https://commons.wikimedia.org/wiki/File:Anderssen,_Adolf_%22-5%22_-_DPLA_-_9ca464339f18b3d8be87fccc68c3ee73_(cropped).jpg) | Cleveland Public Library / DPLA | Public domain |
 | Акиба Рубинштейн | `20-rubinstein.png` | [Akiba-Rubinstein.png](https://commons.wikimedia.org/wiki/File:Akiba-Rubinstein.png) | Unknown author; Deutsche Schachzeitung, January 1908 | Public domain |
@@ -32,7 +33,6 @@
 | Пётр Свидлер | `26-svidler.jpg` | [PeterSvidler19.jpg](https://commons.wikimedia.org/wiki/File:PeterSvidler19.jpg) | Stefan64 | CC BY-SA 4.0 |
 | Юдит Полгар | `27-polgar.jpg` | [Judit Polgár 2013.jpg](https://commons.wikimedia.org/wiki/File:Judit_Polg%C3%A1r_2013.jpg) | Przemysław Jahr / Wikimedia Commons | CC BY-SA 3.0 |
 | Левон Аронян | `28-aronian.jpg` | [LevonAronian14a.jpg](https://commons.wikimedia.org/wiki/File:LevonAronian14a.jpg) | Stefan64 | CC BY-SA 3.0 |
-| Шахрияр Мамедьяров | `29-mamedyarov.jpg` | [Şəhriyar Məmmədyarov 2018 (crop).jpg](https://commons.wikimedia.org/wiki/File:%C5%9E%C9%99hriyar_M%C9%99mm%C9%99dyarov_2018_(crop).jpg) | Etery Kublashvili / ruchess.ru | CC BY-SA 3.0 |
 | Хикару Накамура | `30-nakamura.jpg` | [Hikaru Nakamura (2016) crop.jpg](https://commons.wikimedia.org/wiki/File:Hikaru_Nakamura_(2016)_crop.jpg) | Andreas Kontokanis; cropped derivative | CC BY-SA 2.0 |
 | Фабиано Каруана | `31-caruana.jpg` | [Fabiano Caruana in 2025.jpg](https://commons.wikimedia.org/wiki/File:Fabiano_Caruana_in_2025.jpg) | Frans Peeters | CC BY-SA 2.0 |
 | Ян Непомнящий | `32-nepomniachtchi.jpg` | [Ian Nepomniachtchi in 2024 (cropped v2).jpg](https://commons.wikimedia.org/wiki/File:Ian_Nepomniachtchi_in_2024_(cropped_v2).jpg) | Frans Peeters | CC BY-SA 2.0 |

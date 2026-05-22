@@ -59,6 +59,9 @@ const backFromInfoButton = document.querySelector("#backFromInfoButton");
 const infoPageTitle = document.querySelector("#infoPageTitle");
 const infoArticles = document.querySelectorAll(".info-article");
 const projectLinks = document.querySelectorAll(".project-links a[data-info-page]");
+const biographyList = document.querySelector("#biographyList");
+const biographyReader = document.querySelector("#biographyReader");
+const biographyItems = window.ChessLegendsBiographies || [];
 const profileElements = {
   name: document.querySelector("#profileName"),
   country: document.querySelector("#profileCountry"),
@@ -530,8 +533,127 @@ function getActiveScreen() {
   return document.querySelector(".screen.is-active") || profileScreen;
 }
 
+function renderMarkdown(markdownText) {
+  const fragment = document.createDocumentFragment();
+  const lines = markdownText.split(/\r?\n/);
+  let list = null;
+
+  lines.forEach((line) => {
+    const text = line.trim();
+
+    if (!text) {
+      list = null;
+      return;
+    }
+
+    if (text.startsWith("# ")) {
+      const title = document.createElement("h3");
+      title.textContent = text.slice(2);
+      fragment.append(title);
+      list = null;
+      return;
+    }
+
+    if (text.startsWith("## ")) {
+      const subtitle = document.createElement("h4");
+      subtitle.textContent = text.slice(3);
+      fragment.append(subtitle);
+      list = null;
+      return;
+    }
+
+    if (text.startsWith("- ")) {
+      if (!list) {
+        list = document.createElement("ul");
+        fragment.append(list);
+      }
+
+      const item = document.createElement("li");
+      item.textContent = text.slice(2);
+      list.append(item);
+      return;
+    }
+
+    const paragraph = document.createElement("p");
+    paragraph.textContent = text;
+    fragment.append(paragraph);
+    list = null;
+  });
+
+  return fragment;
+}
+
+async function openBiography(biography) {
+  if (!biographyReader) {
+    return;
+  }
+
+  biographyList.hidden = true;
+  biographyReader.hidden = false;
+  biographyReader.textContent = "Загружаем биографию...";
+
+  const backButton = document.createElement("button");
+  backButton.className = "biography-back";
+  backButton.type = "button";
+  backButton.textContent = "К списку";
+  backButton.addEventListener("click", showBiographyCards);
+
+  try {
+    const response = await fetch(biography.fileRu);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const markdownText = await response.text();
+    biographyReader.replaceChildren(backButton, renderMarkdown(markdownText));
+  } catch {
+    const message = document.createElement("p");
+    message.textContent = "Не удалось загрузить биографию. Проверьте, что проект открыт через локальный сервер.";
+    biographyReader.replaceChildren(backButton, message);
+  }
+}
+
+function renderBiographyList() {
+  if (!biographyList || biographyList.childElementCount > 0) {
+    return;
+  }
+
+  const listItems = document.createDocumentFragment();
+
+  biographyItems.forEach((biography) => {
+    const link = document.createElement("button");
+    const portrait = document.createElement("img");
+    const name = document.createElement("span");
+
+    link.className = "biography-card";
+    link.type = "button";
+    link.dataset.biographyId = biography.id;
+    portrait.src = biography.photo;
+    portrait.alt = biography.nameRu;
+    portrait.loading = "lazy";
+    name.textContent = biography.nameRu;
+    link.append(portrait, name);
+    link.addEventListener("click", () => openBiography(biography));
+    listItems.append(link);
+  });
+
+  biographyList.replaceChildren(listItems);
+}
+
+function showBiographyCards() {
+  if (!biographyList || !biographyReader) {
+    return;
+  }
+
+  biographyList.hidden = false;
+  biographyReader.hidden = true;
+  biographyReader.replaceChildren();
+}
+
 function openInfoPage(pageName, titleText) {
   previousInfoScreen = getActiveScreen();
+  infoScreen.classList.toggle("is-biographies", pageName === "biographies");
 
   const activeArticle = [...infoArticles].find((article) => article.dataset.infoPage === pageName);
   const fallbackTitle = activeArticle?.dataset.title || "Правила и условия";
@@ -542,9 +664,15 @@ function openInfoPage(pageName, titleText) {
 
   infoPageTitle.textContent = titleText || fallbackTitle;
   showScreen(infoScreen);
+
+  if (pageName === "biographies") {
+    renderBiographyList();
+    showBiographyCards();
+  }
 }
 
 function closeInfoPage() {
+  infoScreen.classList.remove("is-biographies");
   showScreen(previousInfoScreen || profileScreen);
   previousInfoScreen = null;
 }

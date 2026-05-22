@@ -232,10 +232,12 @@
           </article>
 
           <article class="info-article" id="biographiesInfo" data-info-page="biographies" data-title="Биографии легенд" hidden>
-            <p>
-              Здесь позже появятся краткие биографии шахматистов: главные партии, титулы,
-              стиль игры и интересные факты.
-            </p>
+            <div class="biography-layout">
+              <nav class="biography-list" id="biographyList" aria-label="Список шахматистов"></nav>
+              <section class="biography-reader" id="biographyReader" aria-live="polite">
+                <p>Выберите шахматиста из списка, чтобы открыть биографию.</p>
+              </section>
+            </div>
           </article>
 
           <article class="info-article" id="photoUseInfo" data-info-page="photo-use" data-title="Условия использования фото" hidden>
@@ -275,6 +277,7 @@
               <div class="credit-item"><strong>Вишванатан Ананд</strong><span>Wolfgang Jekel</span><small>CC BY 2.0</small></div>
               <div class="credit-item"><strong>Магнус Карлсен</strong><span>Andreas Kontokanis</span><small>CC BY-SA 2.0</small></div>
               <div class="credit-item"><strong>Дин Лижэнь</strong><span>Stefan64</span><small>CC BY-SA 3.0</small></div>
+              <div class="credit-item"><strong>Гукеш Доммараджу</strong><span>Локальный файл из набора Chess Cards</span><small>Проверьте лицензию перед публикацией</small></div>
               <div class="credit-item"><strong>Пол Морфи</strong><span>Wikimedia Commons source</span><small>Public domain</small></div>
               <div class="credit-item"><strong>Адольф Андерсен</strong><span>Cleveland Public Library / DPLA</span><small>Public domain</small></div>
               <div class="credit-item"><strong>Акиба Рубинштейн</strong><span>Unknown author; Deutsche Schachzeitung, January 1908</span><small>Public domain</small></div>
@@ -286,7 +289,6 @@
               <div class="credit-item"><strong>Пётр Свидлер</strong><span>Stefan64</span><small>CC BY-SA 4.0</small></div>
               <div class="credit-item"><strong>Юдит Полгар</strong><span>Przemyslaw Jahr / Wikimedia Commons</span><small>CC BY-SA 3.0</small></div>
               <div class="credit-item"><strong>Левон Аронян</strong><span>Stefan64</span><small>CC BY-SA 3.0</small></div>
-              <div class="credit-item"><strong>Шахрияр Мамедьяров</strong><span>Etery Kublashvili / ruchess.ru</span><small>CC BY-SA 3.0</small></div>
               <div class="credit-item"><strong>Хикару Накамура</strong><span>Andreas Kontokanis; cropped derivative</span><small>CC BY-SA 2.0</small></div>
               <div class="credit-item"><strong>Фабиано Каруана</strong><span>Frans Peeters</span><small>CC BY-SA 2.0</small></div>
               <div class="credit-item"><strong>Ян Непомнящий</strong><span>Frans Peeters</span><small>CC BY-SA 2.0</small></div>
@@ -306,6 +308,7 @@
     </main>
 
     <script src="data/data.js"></script>
+    <script src="content/biographies/index.js"></script>
     <script src="src/screens.js"></script>
     <script src="src/setup.js"></script>
     <script src="src/profile.js"></script>
