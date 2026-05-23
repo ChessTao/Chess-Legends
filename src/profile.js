@@ -2,6 +2,9 @@
   const LEGACY_STORAGE_KEY = "chessLegendsProfile";
   const PROFILES_STORAGE_KEY = "chessLegendsProfiles";
   const ACTIVE_PROFILE_ID_KEY = "chessLegendsActiveProfileId";
+  const PASSWORD_MIN_LENGTH = 4;
+  const API_TIMEOUT_MS = 6000;
+  const PROFILE_SERVER_ERROR = "Для входа с паролем откройте игру через сервер профилей: npm start, затем http://127.0.0.1:4173/.";
   const minimumMovesByDifficulty = {
     "Начинающий": 8,
     "КМС": 16,
@@ -22,6 +25,7 @@
     twoPlayerDraws: 0,
     bestTime: null,
     bestMoves: null,
+    serverProfile: false,
     recordsByDifficulty: {}
   };
 
@@ -50,6 +54,80 @@
 
   function createProfileId() {
     return `profile-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  function createPasswordSalt() {
+    const bytes = new Uint8Array(16);
+
+    if (window.crypto?.getRandomValues) {
+      window.crypto.getRandomValues(bytes);
+    } else {
+      for (let index = 0; index < bytes.length; index += 1) {
+        bytes[index] = Math.floor(Math.random() * 256);
+      }
+    }
+
+    return bytesToHex(bytes);
+  }
+
+  function bytesToHex(bytes) {
+    return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  }
+
+  function fallbackHash(value) {
+    let hash = 2166136261;
+
+    for (let index = 0; index < value.length; index += 1) {
+      hash ^= value.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+
+    return `fallback-${(hash >>> 0).toString(16).padStart(8, "0")}`;
+  }
+
+  async function hashPassword(password, salt) {
+    const value = `${salt}:${password}`;
+
+    if (window.crypto?.subtle && window.TextEncoder) {
+      const encodedValue = new TextEncoder().encode(value);
+      const digest = await window.crypto.subtle.digest("SHA-256", encodedValue);
+
+      return `sha256-${bytesToHex(new Uint8Array(digest))}`;
+    }
+
+    return fallbackHash(value);
+  }
+
+  function validatePassword(password) {
+    return password.length >= PASSWORD_MIN_LENGTH;
+  }
+
+  function hasProfilePassword(profile) {
+    return Boolean(profile?.passwordHash && profile?.passwordSalt);
+  }
+
+  async function createPasswordFields(password) {
+    const passwordSalt = createPasswordSalt();
+    const passwordHash = await hashPassword(password, passwordSalt);
+
+    return { passwordHash, passwordSalt };
+  }
+
+  async function setProfilePassword(profile, password) {
+    return {
+      ...profile,
+      ...(await createPasswordFields(password))
+    };
+  }
+
+  async function verifyProfilePassword(profile, password) {
+    if (!hasProfilePassword(profile)) {
+      return false;
+    }
+
+    const passwordHash = await hashPassword(password, profile.passwordSalt);
+
+    return passwordHash === profile.passwordHash;
   }
 
   function normalizeProfile(profile = {}) {
@@ -91,6 +169,12 @@
 
   function setActiveProfile(profileId) {
     localStorage.setItem(ACTIVE_PROFILE_ID_KEY, profileId);
+  }
+
+  function clearProfiles() {
+    localStorage.removeItem(PROFILES_STORAGE_KEY);
+    localStorage.removeItem(ACTIVE_PROFILE_ID_KEY);
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
   }
 
   function listProfiles() {
@@ -165,7 +249,100 @@
       localStorage.setItem(LEGACY_STORAGE_KEY, JSON.stringify(normalizedProfile));
     }
 
+    if (normalizedProfile.serverProfile && !options.skipServerSync) {
+      syncProfileToServer(normalizedProfile);
+    }
+
     return normalizedProfile;
+  }
+
+  async function requestProfileApi(path, payload = null, options = {}) {
+    if (typeof fetch !== "function") {
+      throw new Error("Сервер профилей недоступен.");
+    }
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+
+    try {
+      const response = await fetch(path, {
+        method: payload ? "POST" : "GET",
+        credentials: "same-origin",
+        headers: payload ? { "Content-Type": "application/json" } : {},
+        body: payload ? JSON.stringify(payload) : undefined,
+        signal: controller.signal
+      });
+      const contentType = response.headers.get("Content-Type") || "";
+      const data = contentType.includes("application/json")
+        ? await response.json().catch(() => ({}))
+        : {};
+
+      if (!response.ok) {
+        throw new Error(data.error || options.errorMessage || PROFILE_SERVER_ERROR);
+      }
+
+      if (!contentType.includes("application/json")) {
+        throw new Error(PROFILE_SERVER_ERROR);
+      }
+
+      return data;
+    } catch (error) {
+      if (error.name === "AbortError" || error instanceof TypeError) {
+        throw new Error(PROFILE_SERVER_ERROR);
+      }
+
+      throw error;
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
+  }
+
+  async function syncProfilesFromServer() {
+    const data = await requestProfileApi("/api/profiles", null, {
+      errorMessage: "Не удалось загрузить профили с сервера."
+    });
+    const serverProfiles = Array.isArray(data.profiles)
+      ? data.profiles.map((profile) => normalizeProfile({ ...profile, serverProfile: true }))
+      : [];
+    const activeProfileId = getActiveProfileId();
+
+    writeProfiles(serverProfiles);
+
+    if (activeProfileId && !serverProfiles.some((profile) => profile.id === activeProfileId)) {
+      localStorage.removeItem(ACTIVE_PROFILE_ID_KEY);
+    }
+
+    return serverProfiles;
+  }
+
+  async function registerProfileWithPassword(profileData, password) {
+    if (!validatePassword(password)) {
+      throw new Error("Пароль должен быть не короче 4 символов.");
+    }
+
+    const normalizedProfile = normalizeProfile(profileData);
+    const data = await requestProfileApi("/api/register", {
+      name: normalizedProfile.name,
+      country: normalizedProfile.country,
+      password,
+      profile: normalizedProfile
+    });
+
+    return saveProfile({ ...data.profile, serverProfile: true }, { skipServerSync: true });
+  }
+
+  async function loginProfileWithPassword(name, password) {
+    if (!password) {
+      throw new Error("Введите пароль.");
+    }
+
+    const data = await requestProfileApi("/api/login", { name, password });
+
+    return saveProfile({ ...data.profile, serverProfile: true }, { skipServerSync: true });
+  }
+
+  function syncProfileToServer(profile) {
+    requestProfileApi("/api/profiles/save", { profile }).catch(() => {});
   }
 
   function createBlankProfile() {
@@ -490,21 +667,29 @@
   window.ChessLegendsProfile = {
     createBlankProfile,
     createProfile,
+    clearProfiles,
+    hasProfilePassword,
     getProfile,
     hasSavedProfile,
     listProfiles,
     loadProfile,
     initProfile,
+    loginProfileWithPassword,
     recordMatchResult,
     recordProfileResult,
     recordSingleResult,
+    registerProfileWithPassword,
     removeProfiles,
     renderProfile,
     renderProfileStats,
     resetSinglePlayerStats,
     saveProfileFromForm,
     saveProfile,
+    setProfilePassword,
+    syncProfilesFromServer,
     updateProfile,
-    updateProfileWithResult
+    updateProfileWithResult,
+    validatePassword,
+    verifyProfilePassword
   };
 })();

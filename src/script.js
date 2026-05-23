@@ -4,21 +4,25 @@ const { loadAppState, saveAppState } = window.ChessLegendsAppState;
 const { getActiveScreen, getScreenByName, getScreenName, showScreen } = window.ChessLegendsScreens;
 const { getGameSettings, setGameSettings, initSetupControls } = window.ChessLegendsSetup;
 const {
+  clearProfiles,
   createBlankProfile,
-  createProfile,
   getProfile,
   hasSavedProfile,
   listProfiles,
   loadProfile,
   initProfile,
+  loginProfileWithPassword,
   recordMatchResult,
   recordProfileResult,
+  registerProfileWithPassword,
   renderProfile,
   removeProfiles,
   resetSinglePlayerStats,
   saveProfileFromForm,
   saveProfile,
-  updateProfileWithResult
+  syncProfilesFromServer,
+  updateProfileWithResult,
+  validatePassword
 } = window.ChessLegendsProfile;
 const { createProfileFormController } = window.ChessLegendsProfileForm;
 const { createMatchPlayersController } = window.ChessLegendsMatchPlayers;
@@ -72,6 +76,8 @@ const biographyItems = window.ChessLegendsData.biographies || [];
 const photoCredits = window.ChessLegendsData.photoCredits || [];
 const profileElements = {
   name: document.querySelector("#profileName"),
+  password: document.querySelector("#profilePassword"),
+  passwordLabel: document.querySelector("#profilePasswordLabel"),
   country: document.querySelector("#profileCountry"),
   subtitle: document.querySelector("#profileSubtitle"),
   remember: document.querySelector("#rememberProfile")
@@ -151,7 +157,6 @@ function normalizeCountryValue(countryName) {
 const profileForm = createProfileFormController({
   accountElements,
   createBlankProfile,
-  createProfile,
   elements: {
     confirmButton: confirmLoginButton,
     modeButtons: profileModeButtons,
@@ -160,14 +165,16 @@ const profileForm = createProfileFormController({
   },
   findProfileByName,
   listProfiles,
+  loginProfileWithPassword,
   normalizeCountryName,
   normalizeProfileCountryField,
   normalizeProfileName,
   onCurrentPlayerChange: updateCurrentPlayerLabel,
   onShowSetup: showSetupScreen,
+  registerProfileWithPassword,
   renderProfile,
-  saveProfile,
-  saveState
+  saveState,
+  validatePassword
 });
 
 const {
@@ -268,6 +275,17 @@ function initCountryList() {
 
 function handleStartupActions() {
   const url = new URL(window.location.href);
+
+  if (url.searchParams.get("resetProfiles") === "1") {
+    clearProfiles();
+    resetProfileForm();
+    setProfileMode("register");
+    refreshProfileNameList();
+    updateCurrentPlayerLabel();
+    url.searchParams.delete("resetProfiles");
+    window.history.replaceState({}, "", url);
+    return;
+  }
 
   if (localStorage.getItem(PROFILE_CLEANUP_KEY) !== "1") {
     removeProfiles((profile) => {
@@ -477,6 +495,14 @@ initSetupControls();
 initCountryList();
 refreshProfileNameList();
 initProfile(profileElements);
+syncProfilesFromServer()
+  .then(() => {
+    refreshProfileNameList();
+    renderProfile(profileElements, loadProfile());
+    normalizeProfileCountryField(profileElements);
+    updateCurrentPlayerLabel();
+  })
+  .catch(() => {});
 handleStartupActions();
 restoreState();
 
