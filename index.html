@@ -118,9 +118,9 @@
           </header>
 
           <div class="setup-grid">
-            <section class="option-group" aria-labelledby="cardTypeTitle">
-              <h3 id="cardTypeTitle">Тип карточек</h3>
-              <div class="option-row">
+            <section class="option-group option-group-card-type" aria-labelledby="cardTypeTitle">
+              <h3 id="cardTypeTitle">Тип игры</h3>
+              <div class="option-row card-type-row">
                 <button class="option-card is-selected" type="button" data-value="Фото - фото" aria-pressed="true">
                   <span class="option-title">Фото - фото</span>
                   <span class="option-text">Найдите две одинаковые фотографии.</span>
@@ -150,6 +150,16 @@
                 <label class="profile-field">
                   <span>Игрок 2</span>
                   <select id="matchPlayer2Select"></select>
+                </label>
+              </div>
+              <div class="match-guest-grid" id="matchGuestFields" hidden>
+                <label class="profile-field">
+                  <span>Имя нового игрока</span>
+                  <input id="matchGuestName" type="text" maxlength="24" autocomplete="off" placeholder="Игрок 2">
+                </label>
+                <label class="profile-field">
+                  <span>Страна</span>
+                  <input id="matchGuestCountry" type="text" list="countryList" maxlength="64" autocomplete="new-password" placeholder="Выберите страну">
                 </label>
               </div>
               <p class="match-player-note" id="matchPlayersNotice" aria-live="polite"></p>

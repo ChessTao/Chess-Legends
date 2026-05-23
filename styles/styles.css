@@ -57,7 +57,7 @@ body {
 }
 
 .setup-panel {
-  width: min(94vw, 980px);
+  width: min(94vw, 1080px);
   height: min-content;
   max-height: calc(100dvh - clamp(28px, 6vw, 68px));
   display: grid;
@@ -133,6 +133,34 @@ h2 {
   overflow: hidden;
 }
 
+#setupScreen .setup-panel {
+  width: min(96vw, 1220px);
+  max-height: calc(100dvh - clamp(16px, 3vw, 32px));
+  gap: clamp(8px, 1.35vh, 14px);
+  padding: clamp(12px, 1.8vw, 22px);
+}
+
+#setupScreen .setup-header {
+  gap: 3px;
+}
+
+#setupScreen .profile-logo {
+  max-width: min(92%, 720px);
+  font-size: clamp(1.9rem, 4vw, 3.25rem);
+}
+
+#setupScreen .setup-subtitle {
+  font-size: clamp(1.25rem, 2.8vw, 2.15rem);
+}
+
+#setupScreen .setup-player {
+  font-size: 0.9rem;
+}
+
+#setupScreen .setup-grid {
+  gap: clamp(8px, 1.25vh, 12px);
+}
+
 .profile-page {
   width: min(94vw, 860px);
 }
@@ -151,6 +179,10 @@ h2 {
 .option-group {
   display: grid;
   gap: 10px;
+}
+
+#setupScreen .option-group h3 {
+  text-align: center;
 }
 
 h3 {
@@ -382,6 +414,17 @@ h3 {
   align-items: end;
 }
 
+.match-guest-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+
+.match-guest-grid[hidden] {
+  display: none;
+}
+
 .match-player-note {
   min-height: 1.2em;
   margin: 0;
@@ -409,13 +452,15 @@ h3 {
 #accountScreen .profile-stats {
   max-height: min(44dvh, 430px);
   overflow: auto;
-  padding-right: 4px;
+  align-items: start;
+  padding-right: 12px;
+  scrollbar-gutter: stable;
 }
 
 .profile-stat {
   min-height: 64px;
   display: grid;
-  align-content: center;
+  align-content: start;
   gap: 5px;
   padding: 10px 12px;
   border: 1px solid rgba(255, 244, 222, 0.28);
@@ -424,7 +469,7 @@ h3 {
 }
 
 .profile-stat-record {
-  min-height: 150px;
+  min-height: 188px;
 }
 
 .profile-stat span {
@@ -441,9 +486,10 @@ h3 {
 }
 
 .profile-stat small {
+  display: block;
   color: rgba(251, 241, 223, 0.76);
   font-size: 0.74rem;
-  line-height: 1.2;
+  line-height: 1.28;
 }
 
 .option-row,
@@ -451,6 +497,14 @@ h3 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+#setupScreen .card-type-row {
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid rgba(255, 244, 222, 0.42);
+  border-radius: 999px;
+  background: rgba(16, 8, 6, 0.24);
 }
 
 .option-card,
@@ -477,6 +531,19 @@ h3 {
   transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
 }
 
+#setupScreen .option-card {
+  min-height: 42px;
+  gap: 4px;
+  padding: 0 18px;
+  border-color: transparent;
+  border-radius: 999px;
+  text-align: center;
+}
+
+#setupScreen .option-card.is-selected {
+  border-color: rgba(255, 248, 232, 0.96);
+}
+
 .option-card:hover,
 .segment:hover,
 .difficulty:hover,
@@ -499,10 +566,18 @@ h3 {
   font-weight: 700;
 }
 
+#setupScreen .option-title {
+  font-size: clamp(1.02rem, 2vw, 1.28rem);
+}
+
 .option-text {
   color: rgba(251, 241, 223, 0.78);
   font-size: 0.94rem;
   line-height: 1.35;
+}
+
+#setupScreen .option-text {
+  display: none;
 }
 
 .option-card.is-selected .option-text {
@@ -531,6 +606,12 @@ h3 {
   font-size: 0.98rem;
   font-weight: 700;
   transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+#setupScreen .segment,
+#setupScreen .difficulty {
+  min-height: 34px;
+  font-size: 0.9rem;
 }
 
 .profile-mode {
@@ -575,6 +656,18 @@ h3 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+@media (min-width: 900px) {
+  #setupScreen .setup-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  #setupScreen .option-group:first-child,
+  #setupScreen .match-players {
+    grid-column: 1 / -1;
+  }
+}
+
 .play-button {
   justify-self: center;
   min-width: min(100%, 230px);
@@ -588,6 +681,10 @@ h3 {
   font-weight: 700;
   box-shadow: 0 14px 34px rgba(24, 11, 8, 0.32);
   transition: background 160ms ease, transform 160ms ease;
+}
+
+#setupScreen .play-button {
+  min-height: 42px;
 }
 
 .play-button:hover {
@@ -918,7 +1015,7 @@ h3 {
 }
 
 .info-page.is-biographies .info-page-panel {
-  width: min(98vw, 1180px);
+  width: min(98vw, 1500px);
   height: calc(100dvh - clamp(16px, 3vw, 32px));
   max-height: none;
   grid-template-rows: auto minmax(0, 1fr) auto;
@@ -1005,10 +1102,10 @@ h3 {
 .biography-list {
   align-self: center;
   justify-self: center;
-  width: min(100%, calc((100dvh - 230px) * 2), 1120px);
+  width: min(100%, 1420px);
   display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: clamp(5px, 0.85vw, 10px);
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: clamp(5px, 0.65vw, 9px);
   overflow: visible;
   padding: 0;
 }
@@ -1055,6 +1152,13 @@ h3 {
   color: var(--walnut);
   background: rgba(251, 241, 223, 0.88);
   overflow-wrap: anywhere;
+}
+
+@media (max-width: 1180px) {
+  .biography-list {
+    width: min(100%, 980px);
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
 }
 
 .biography-card:hover,
@@ -1167,6 +1271,20 @@ h3 {
 }
 
 @media (min-width: 900px) {
+  .setup.screen.is-active,
+  .profile.screen.is-active {
+    padding-left: clamp(210px, 13vw, 250px);
+  }
+
+  .setup.screen.is-active .setup-panel,
+  .profile.screen.is-active .setup-panel {
+    width: min(100%, 1220px);
+  }
+
+  .profile.screen.is-active .profile-page {
+    width: min(100%, 860px);
+  }
+
   .game.screen.is-active {
     padding-left: clamp(210px, 13vw, 250px);
   }
@@ -1194,6 +1312,8 @@ h3 {
 }
 
 @media (max-width: 899px) {
+  .setup.screen.is-active ~ .project-links,
+  .profile.screen.is-active ~ .project-links,
   .game.screen.is-active ~ .project-links {
     display: none;
   }
@@ -1264,7 +1384,8 @@ h3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .match-player-grid {
+  .match-player-grid,
+  .match-guest-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1360,7 +1481,7 @@ h3 {
   }
 
   .biography-list {
-    width: min(100%, calc((100dvh - 180px) * 2), 1120px);
+    width: min(100%, 1380px);
   }
 
   .biography-card {

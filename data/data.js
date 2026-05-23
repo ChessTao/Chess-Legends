@@ -16,7 +16,7 @@
     { surname: "Крамник", photo: "assets/photos/commons/14-kramnik.jpg" },
     { surname: "Ананд", photo: "assets/photos/commons/15-anand.jpeg" },
     { surname: "Карлсен", photo: "assets/photos/commons/16-carlsen.jpg" },
-    { surname: "Дин Лижень", photo: "assets/photos/commons/17-ding-liren.jpg" },
+    { surname: "Дин Лижэнь", photo: "assets/photos/commons/17-ding-liren.jpg" },
     { surname: "Гукеш", photo: "assets/photos/commons/18-gukesh.jpg" },
     { surname: "Морфи", photo: "assets/photos/commons/18-morphy.jpg" },
     { surname: "Андерсен", photo: "assets/photos/commons/19-anderssen.jpg" },

@@ -44,6 +44,9 @@ const currentPlayerLabel = document.querySelector("#currentPlayerLabel");
 const matchPlayersPanel = document.querySelector("#matchPlayersPanel");
 const matchPlayer1Select = document.querySelector("#matchPlayer1Select");
 const matchPlayer2Select = document.querySelector("#matchPlayer2Select");
+const matchGuestFields = document.querySelector("#matchGuestFields");
+const matchGuestName = document.querySelector("#matchGuestName");
+const matchGuestCountry = document.querySelector("#matchGuestCountry");
 const matchPlayersNotice = document.querySelector("#matchPlayersNotice");
 const countryList = document.querySelector("#countryList");
 const profileNameList = document.querySelector("#profileNameList");
@@ -62,6 +65,7 @@ const projectLinks = document.querySelectorAll(".project-links a[data-info-page]
 const biographyList = document.querySelector("#biographyList");
 const biographyReader = document.querySelector("#biographyReader");
 const biographyItems = window.ChessLegendsBiographies || [];
+const GUEST_MATCH_PLAYER_ID = "__guest__";
 const profileElements = {
   name: document.querySelector("#profileName"),
   country: document.querySelector("#profileCountry"),
@@ -327,9 +331,14 @@ function findProfileByName(name) {
 }
 
 function getMatchPlayerSelection() {
+  const player2Id = matchPlayer2Select?.value || "";
+
   return {
     player1Id: matchPlayer1Select?.value || "",
-    player2Id: matchPlayer2Select?.value || ""
+    player2Id,
+    player2IsGuest: player2Id === GUEST_MATCH_PLAYER_ID,
+    guestName: matchGuestName?.value.trim().replace(/\s+/g, " ") || "",
+    guestCountry: normalizeCountryValue(matchGuestCountry?.value || "")
   };
 }
 
@@ -338,17 +347,18 @@ function getMatchPlayerProfile(playerId) {
 }
 
 function getMatchPlayerSnapshot() {
-  const { player1Id, player2Id } = getMatchPlayerSelection();
+  const { player1Id, player2Id, player2IsGuest, guestName, guestCountry } = getMatchPlayerSelection();
   const player1Profile = getMatchPlayerProfile(player1Id);
   const player2Profile = getMatchPlayerProfile(player2Id);
 
   return {
     player1Id,
-    player2Id,
+    player2Id: player2IsGuest ? "" : player2Id,
     player1Name: player1Profile?.name || "Игрок 1",
-    player2Name: player2Profile?.name || "Игрок 2",
+    player2Name: player2IsGuest ? guestName || "Игрок 2" : player2Profile?.name || "Игрок 2",
     player1Country: player1Profile?.country || "",
-    player2Country: player2Profile?.country || ""
+    player2Country: player2IsGuest ? guestCountry : player2Profile?.country || "",
+    player2IsGuest
   };
 }
 
@@ -362,6 +372,10 @@ function populateMatchPlayerSelect(select, selectedValue, options = {}) {
   profiles.forEach((profile) => {
     select.append(new Option(getProfileOptionText(profile), profile.id));
   });
+
+  if (select === matchPlayer2Select) {
+    select.append(new Option("Новый игрок", GUEST_MATCH_PLAYER_ID));
+  }
 
   if (!select.options.length) {
     const option = new Option(emptyText, "");
@@ -386,10 +400,20 @@ function getSavedMatchProfileId(profileId) {
 function populateMatchPlayerControls(savedSelection = {}) {
   const activeProfile = loadProfile();
   const player1Id = activeProfile.id || "";
-  let player2Id = getSavedMatchProfileId(savedSelection.player2Id) || "";
+  let player2Id = savedSelection.player2IsGuest
+    ? GUEST_MATCH_PLAYER_ID
+    : getSavedMatchProfileId(savedSelection.player2Id) || "";
 
   if (player2Id && player2Id === player1Id) {
     player2Id = "";
+  }
+
+  if (matchGuestName && savedSelection.player2IsGuest && (savedSelection.guestName || savedSelection.player2Name)) {
+    matchGuestName.value = savedSelection.guestName || savedSelection.player2Name;
+  }
+
+  if (matchGuestCountry && savedSelection.player2IsGuest && (savedSelection.guestCountry || savedSelection.player2Country)) {
+    matchGuestCountry.value = savedSelection.guestCountry || savedSelection.player2Country;
   }
 
   populateMatchPlayerSelect(matchPlayer1Select, player1Id, {
@@ -399,7 +423,26 @@ function populateMatchPlayerControls(savedSelection = {}) {
     excludeIds: [player1Id],
     emptyText: "Нет второго профиля"
   });
+  updateGuestMatchFields();
   updateMatchPlayerNotice();
+}
+
+function updateGuestMatchFields() {
+  if (!matchGuestFields) {
+    return;
+  }
+
+  matchGuestFields.hidden = matchPlayer2Select?.value !== GUEST_MATCH_PLAYER_ID;
+}
+
+function clearGuestMatchFields() {
+  if (matchGuestName) {
+    matchGuestName.value = "";
+  }
+
+  if (matchGuestCountry) {
+    matchGuestCountry.value = "";
+  }
 }
 
 function isMatchModeSelected() {
@@ -417,7 +460,9 @@ function getMatchPlayerName(playerId, fallbackName) {
 }
 
 function updateMatchPlayerNotice() {
-  const { player1Id, player2Id } = getMatchPlayerSelection();
+  updateGuestMatchFields();
+
+  const { player1Id, player2Id, player2IsGuest, guestName } = getMatchPlayerSelection();
   const hasDuplicateProfiles = player1Id && player1Id === player2Id;
 
   if (hasDuplicateProfiles) {
@@ -427,6 +472,11 @@ function updateMatchPlayerNotice() {
 
   if (!isMatchModeSelected()) {
     matchPlayersNotice.textContent = "";
+    return;
+  }
+
+  if (player2IsGuest) {
+    matchPlayersNotice.textContent = `${getMatchPlayerName(player1Id, "Игрок 1")} против ${guestName || "новый игрок"}`;
     return;
   }
 
@@ -443,16 +493,32 @@ function validateMatchPlayers() {
     return true;
   }
 
-  const { player1Id, player2Id } = getMatchPlayerSelection();
+  const { player1Id, player2Id, player2IsGuest, guestName } = getMatchPlayerSelection();
 
   if (!player1Id || !player2Id) {
-    window.alert("Для матча выберите второго игрока из сохраненных профилей.");
+    window.alert("Для матча выберите второго игрока или добавьте нового.");
     return false;
   }
 
-  if (player1Id === player2Id) {
+  if (!player2IsGuest && player1Id === player2Id) {
     window.alert("Для матча выберите два разных профиля.");
     return false;
+  }
+
+  if (player2IsGuest) {
+    const player1Name = getMatchPlayerName(player1Id, "Игрок 1");
+
+    if (!guestName) {
+      window.alert("Введите имя второго игрока.");
+      matchGuestName?.focus();
+      return false;
+    }
+
+    if (normalizeProfileName(guestName) === normalizeProfileName(player1Name)) {
+      window.alert("Введите другое имя для второго игрока.");
+      matchGuestName?.focus();
+      return false;
+    }
   }
 
   return true;
@@ -467,9 +533,9 @@ function getMirroredMatchResult(result) {
 }
 
 function recordSelectedMatchResult(result) {
-  const { player1Id, player2Id } = getMatchPlayerSelection();
+  const { player1Id, player2Id, player2IsGuest } = getMatchPlayerSelection();
 
-  if (player1Id && player2Id) {
+  if (player1Id && player2Id && !player2IsGuest) {
     recordMatchResult(player1Id, player2Id, result);
   }
 
@@ -493,11 +559,34 @@ function setProfileMode(mode) {
   profileElements.country.disabled = false;
   profileElements.country.closest(".profile-field").hidden = isLogin;
   profileElements.remember.disabled = false;
-  confirmLoginButton.hidden = !isLogin;
+  confirmLoginButton.hidden = false;
+  confirmLoginButton.textContent = isLogin ? "ВОЙТИ" : "ВХОД";
   profileElements.name.readOnly = true;
   profileElements.subtitle.textContent = "Рекорды сохраняются на этом устройстве";
 
   normalizeProfileCountryField(profileElements);
+}
+
+function confirmProfileEntry() {
+  if (getProfileMode() === "login") {
+    loginWithProfile();
+    return;
+  }
+
+  const requestedName = profileElements.name.value.trim();
+  const existingProfile = findProfileByName(requestedName);
+
+  if (existingProfile) {
+    saveProfile(existingProfile);
+    renderProfile(profileElements, existingProfile);
+    renderProfile(accountElements, existingProfile);
+    normalizeProfileCountryField(profileElements);
+    normalizeProfileCountryField(accountElements);
+    showSetupScreen();
+    return;
+  }
+
+  registerProfile();
 }
 
 function updateCurrentPlayerLabel() {
@@ -851,9 +940,9 @@ startButton.addEventListener("click", () => {
   saveState("profile");
 });
 
-loginProfileButton.addEventListener("click", loginWithProfile);
-registerProfileButton.addEventListener("click", registerProfile);
-confirmLoginButton.addEventListener("click", loginWithProfile);
+loginProfileButton.addEventListener("click", () => setProfileMode("login"));
+registerProfileButton.addEventListener("click", () => setProfileMode("register"));
+confirmLoginButton.addEventListener("click", confirmProfileEntry);
 
 projectLinks.forEach((link) => {
   link.addEventListener("click", (event) => {
@@ -905,6 +994,21 @@ matchPlayer1Select.addEventListener("change", () => {
 });
 
 matchPlayer2Select.addEventListener("change", () => {
+  if (matchPlayer2Select.value === GUEST_MATCH_PLAYER_ID) {
+    clearGuestMatchFields();
+  }
+
+  updateMatchPlayerNotice();
+  saveState("setup");
+});
+
+matchGuestName?.addEventListener("input", () => {
+  updateMatchPlayerNotice();
+  saveState("setup");
+});
+
+matchGuestCountry?.addEventListener("change", () => {
+  matchGuestCountry.value = normalizeCountryValue(matchGuestCountry.value);
   updateMatchPlayerNotice();
   saveState("setup");
 });
