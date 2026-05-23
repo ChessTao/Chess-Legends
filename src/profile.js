@@ -235,15 +235,24 @@
     };
   }
 
-  function calculateMatchRatingGain(result) {
+  function calculateMatchRatingDelta(result) {
     const difficultyBonus = {
       "Начинающий": 8,
       "КМС": 14,
       "Мастер": 20,
       "Гроссмейстер": 28
     };
+    const baseDelta = (difficultyBonus[result.settings.difficulty] || 8) + 6;
 
-    return (difficultyBonus[result.settings.difficulty] || 8) + 6;
+    if (result.winner === 0) {
+      return baseDelta;
+    }
+
+    if (result.winner === 1) {
+      return -Math.ceil(baseDelta * 0.7);
+    }
+
+    return 1;
   }
 
   function applyResultToProfile(profile, result) {
@@ -270,7 +279,10 @@
 
     if (result.settings.mode === "Два игрока") {
       updatedProfile.matchGamesPlayed = (updatedProfile.matchGamesPlayed || 0) + 1;
-      updatedProfile.matchRating = (updatedProfile.matchRating || defaultProfile.matchRating) + calculateMatchRatingGain(result);
+      updatedProfile.matchRating = Math.max(
+        100,
+        (updatedProfile.matchRating || defaultProfile.matchRating) + calculateMatchRatingDelta(result)
+      );
 
       if (result.winner === 0) {
         updatedProfile.twoPlayerWins += 1;

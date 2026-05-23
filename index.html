@@ -143,12 +143,9 @@
             <section class="option-group match-players" id="matchPlayersPanel" aria-labelledby="matchPlayersTitle" hidden>
               <h3 id="matchPlayersTitle">Участники матча</h3>
               <div class="match-player-grid">
+                <select id="matchPlayer1Select" hidden disabled aria-hidden="true"></select>
                 <label class="profile-field">
-                  <span>Игрок 1</span>
-                  <select id="matchPlayer1Select" disabled></select>
-                </label>
-                <label class="profile-field">
-                  <span>Игрок 2</span>
+                  <span>Соперник</span>
                   <select id="matchPlayer2Select"></select>
                 </label>
               </div>
@@ -226,6 +223,7 @@
           <header class="setup-header">
             <h2 class="profile-logo">Шахматные Легенды</h2>
             <p class="setup-subtitle" id="infoPageTitle">Правила и условия</p>
+            <button class="back-button info-back-button" id="backFromInfoButton" type="button">Назад</button>
           </header>
 
           <article class="info-article" id="rulesInfo" data-info-page="rules" data-title="Правила игры" hidden>
@@ -269,43 +267,8 @@
               Фотографии взяты с Wikimedia Commons. Ниже указаны авторы или источники исходных файлов
               и лицензии, по которым эти изображения используются в игре.
             </p>
-            <div class="credits-list" aria-label="Список авторов фотографий">
-              <div class="credit-item"><strong>Вильгельм Стейниц</strong><span>Fritz Schumann; Cleveland Public Library / DPLA</span><small>Public domain</small></div>
-              <div class="credit-item"><strong>Эмануил Ласкер</strong><span>Unknown author; German Federal Archive</span><small>CC BY-SA 3.0 DE</small></div>
-              <div class="credit-item"><strong>Хосе Рауль Капабланка</strong><span>Anonymous / Keystone-France</span><small>Public domain</small></div>
-              <div class="credit-item"><strong>Александр Алехин</strong><span>George Grantham Bain Collection; derivative work by JesusAngelRey</span><small>Public domain</small></div>
-              <div class="credit-item"><strong>Макс Эйве</strong><span>Anefo / R. Mieremet; Dutch National Archives</span><small>CC BY-SA 3.0 NL</small></div>
-              <div class="credit-item"><strong>Михаил Ботвинник</strong><span>Harry Pot / Anefo; Dutch National Archives</span><small>CC BY-SA 3.0 NL</small></div>
-              <div class="credit-item"><strong>Василий Смыслов</strong><span>Koen Suyk / Anefo</span><small>CC0</small></div>
-              <div class="credit-item"><strong>Михаил Таль</strong><span>Rob C. Croes / Anefo; Dutch National Archives</span><small>CC BY-SA 3.0 NL</small></div>
-              <div class="credit-item"><strong>Тигран Петросян</strong><span>Harry Pot / Anefo; Nationaal Archief</span><small>CC0</small></div>
-              <div class="credit-item"><strong>Борис Спасский</strong><span>Rob Bogaerts / Anefo</span><small>CC0</small></div>
-              <div class="credit-item"><strong>Бобби Фишер</strong><span>Ulrich Kohls / German Federal Archive; color derivative by Karpouzi</span><small>CC BY-SA 3.0</small></div>
-              <div class="credit-item"><strong>Анатолий Карпов</strong><span>Veni Markovski</span><small>CC BY-SA 4.0</small></div>
-              <div class="credit-item"><strong>Гарри Каспаров</strong><span>Lukasz Kobus / European Union</span><small>CC BY 4.0</small></div>
-              <div class="credit-item"><strong>Владимир Крамник</strong><span>Vladimir Barskij / ruchess.ru</span><small>CC BY-SA 3.0</small></div>
-              <div class="credit-item"><strong>Вишванатан Ананд</strong><span>Wolfgang Jekel</span><small>CC BY 2.0</small></div>
-              <div class="credit-item"><strong>Магнус Карлсен</strong><span>Andreas Kontokanis</span><small>CC BY-SA 2.0</small></div>
-              <div class="credit-item"><strong>Дин Лижэнь</strong><span>Stefan64</span><small>CC BY-SA 3.0</small></div>
-              <div class="credit-item"><strong>Гукеш Доммараджу</strong><span>Локальный файл из набора Chess Cards</span><small>Проверьте лицензию перед публикацией</small></div>
-              <div class="credit-item"><strong>Пол Морфи</strong><span>Wikimedia Commons source</span><small>Public domain</small></div>
-              <div class="credit-item"><strong>Адольф Андерсен</strong><span>Cleveland Public Library / DPLA</span><small>Public domain</small></div>
-              <div class="credit-item"><strong>Акиба Рубинштейн</strong><span>Unknown author; Deutsche Schachzeitung, January 1908</span><small>Public domain</small></div>
-              <div class="credit-item"><strong>Давид Бронштейн</strong><span>Joop van Bilsen / Anefo</span><small>CC0</small></div>
-              <div class="credit-item"><strong>Пауль Керес</strong><span>Unknown photographer; scanned from Valter Heuer, "Meie Keres"</span><small>Public domain</small></div>
-              <div class="credit-item"><strong>Виктор Корчной</strong><span>Bert Verhoeff / Anefo</span><small>CC0</small></div>
-              <div class="credit-item"><strong>Василий Иванчук</strong><span>GibChess</span><small>CC BY 3.0</small></div>
-              <div class="credit-item"><strong>Веселин Топалов</strong><span>Stefan64</span><small>CC BY-SA 3.0</small></div>
-              <div class="credit-item"><strong>Пётр Свидлер</strong><span>Stefan64</span><small>CC BY-SA 4.0</small></div>
-              <div class="credit-item"><strong>Юдит Полгар</strong><span>Przemyslaw Jahr / Wikimedia Commons</span><small>CC BY-SA 3.0</small></div>
-              <div class="credit-item"><strong>Левон Аронян</strong><span>Stefan64</span><small>CC BY-SA 3.0</small></div>
-              <div class="credit-item"><strong>Хикару Накамура</strong><span>Andreas Kontokanis; cropped derivative</span><small>CC BY-SA 2.0</small></div>
-              <div class="credit-item"><strong>Фабиано Каруана</strong><span>Frans Peeters</span><small>CC BY-SA 2.0</small></div>
-              <div class="credit-item"><strong>Ян Непомнящий</strong><span>Frans Peeters</span><small>CC BY-SA 2.0</small></div>
-            </div>
+            <div class="credits-list" id="photoCreditsList" aria-label="Список авторов фотографий"></div>
           </article>
-
-          <button class="play-button" id="backFromInfoButton" type="button">НАЗАД</button>
         </div>
       </section>
 
@@ -318,12 +281,15 @@
     </main>
 
     <script src="data/data.js"></script>
-    <script src="content/biographies/index.js"></script>
+    <script src="src/app-state.js"></script>
     <script src="src/screens.js"></script>
     <script src="src/setup.js"></script>
     <script src="src/profile.js"></script>
+    <script src="src/profile-form.js"></script>
+    <script src="src/match-players.js"></script>
     <script src="src/game-preview.js"></script>
     <script src="src/intro.js"></script>
+    <script src="src/info-pages.js"></script>
     <script src="src/script.js"></script>
   </body>
 </html>
