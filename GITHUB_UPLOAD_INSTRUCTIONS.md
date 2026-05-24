@@ -225,14 +225,19 @@ https://github.com/USERNAME/chess-legends
 - `data/`
 - `styles/`
 - `assets/`
+- `content/`
 - `package.json`
-- `ARCHITECTURE_REVIEW.md`
+- `README.md`
+- `ARCHITECTURE.md`
+- `MEMORY_RULES.md`
+- `PHOTO_CREDITS.md`
 
 И что там нет:
 
 - `server.log`
 - `server.error.log`
 - `Тексты/`
+- `.runtime/`
 
 ## 11. Важно про вход с паролем
 

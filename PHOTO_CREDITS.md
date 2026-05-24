@@ -1,6 +1,8 @@
 # Авторы фотографий
 
-Фотографии в `assets/photos/commons/` взяты с Wikimedia Commons. Локальные файлы являются скачанными thumbnail/resized-версиями Commons-файлов для использования в карточках игры. Если на странице Commons уже указано, что файл является cropped/derivative work, это сохранено в названии исходного файла или примечании ниже.
+Фотографии в `assets/photos/commons/` взяты с Wikimedia Commons, кроме файлов, для которых в таблице явно указано иное. Локальные файлы являются скачанными thumbnail/resized-версиями исходных файлов для использования в карточках игры.
+
+Краткие credits для интерфейса также продублированы в `data/data.js`. При замене фотографии нужно обновить и этот файл, и таблицу ниже.
 
 | Игрок | Локальный файл | Исходный файл Commons | Автор / источник | Лицензия |
 | --- | --- | --- | --- | --- |
@@ -21,7 +23,7 @@
 | Вишванатан Ананд | `15-anand.jpeg` | [Viswanathan Anand (2016).jpeg](https://commons.wikimedia.org/wiki/File:Viswanathan_Anand_(2016).jpeg) | Wolfgang Jekel | CC BY 2.0 |
 | Магнус Карлсен | `16-carlsen.jpg` | [Carlsen Magnus (30238051906).jpg](https://commons.wikimedia.org/wiki/File:Carlsen_Magnus_(30238051906).jpg) | Andreas Kontokanis | CC BY-SA 2.0 |
 | Дин Лижэнь | 17-ding-liren.jpg | DingLiren24a.jpg | Stefan64 | CC BY-SA 3.0 |
-| Гукеш Доммараджу | 18-gukesh.jpg | Локальный файл D:\Chess Cards\Gukesh.jpg | Файл из набора Chess Cards | Проверьте лицензию перед публикацией |
+| Гукеш Доммараджу | `18-gukesh.jpg` | Локальный файл из набора Chess Cards | Файл из набора Chess Cards | Проверьте лицензию перед публикацией |
 | Пол Морфи | `18-morphy.jpg` | [PaulMorphy.jpg](https://commons.wikimedia.org/wiki/File:PaulMorphy.jpg) | Wikimedia Commons source | Public domain |
 | Адольф Андерсен | `19-anderssen.jpg` | [Anderssen, Adolf "-5" - DPLA - 9ca464339f18b3d8be87fccc68c3ee73 (cropped).jpg](https://commons.wikimedia.org/wiki/File:Anderssen,_Adolf_%22-5%22_-_DPLA_-_9ca464339f18b3d8be87fccc68c3ee73_(cropped).jpg) | Cleveland Public Library / DPLA | Public domain |
 | Акиба Рубинштейн | `20-rubinstein.png` | [Akiba-Rubinstein.png](https://commons.wikimedia.org/wiki/File:Akiba-Rubinstein.png) | Unknown author; Deutsche Schachzeitung, January 1908 | Public domain |

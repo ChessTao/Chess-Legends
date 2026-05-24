@@ -1,6 +1,6 @@
 # Magnus Carlsen
 
-Magnus Carlsen (born in 1990) is a Norwegian chess grandmaster, the sixteenth World Chess Champion (2013-2023), five-time World Rapid Chess Champion (2014, 2015, 2019, 2022, 2023), and eight-time World Blitz Chess Champion (2009, 2014, 2017-2019, 2022-2024).
+Magnus Carlsen (born in 1990) is a Norwegian chess grandmaster, the sixteenth World Chess Champion (2013-2023), six-time World Rapid Chess Champion (2014, 2015, 2019, 2022, 2023, 2025), and nine-time World Blitz Chess Champion (2009, 2014, 2017-2019, 2022-2025).
 
 ## Main chess achievements
 
