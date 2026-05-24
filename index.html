@@ -50,8 +50,7 @@
             <div class="profile-form">
               <label class="profile-field">
                 <span>Имя</span>
-                <input id="profileName" type="text" maxlength="24" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" readonly placeholder="Игрок">
-                <div class="profile-name-list" id="profileNameList" hidden></div>
+                <input id="profileName" type="text" maxlength="24" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Введите имя">
               </label>
               <label class="profile-field">
                 <span id="profilePasswordLabel">Пароль</span>
@@ -87,7 +86,6 @@
             <div class="profile-head">
               <div>
                 <h3 id="accountTitle">Мой профиль</h3>
-                <p class="profile-subtitle">Данные игрока и рекорды по сложностям</p>
               </div>
             </div>
 
@@ -243,6 +241,10 @@
             <p>В режиме для двух игроков участники ходят по очереди. Побеждает тот, кто соберет больше пар.</p>
           </article>
 
+          <article class="info-article" id="leaderboardsInfo" data-info-page="leaderboards" data-title="Доска лидеров" hidden>
+            <div class="leaderboards-list" id="leaderboardsList" aria-live="polite"></div>
+          </article>
+
           <article class="info-article" id="biographiesInfo" data-info-page="biographies" data-title="Биографии легенд" hidden>
             <div class="biography-layout">
               <nav class="biography-list" id="biographyList" aria-label="Список шахматистов"></nav>
@@ -277,6 +279,9 @@
       </section>
 
       <section class="project-links" aria-label="Правила и условия использования">
+        <button type="button" id="playFromInfoButton">Играть</button>
+        <button type="button" id="sideProfileButton" hidden>Мой профиль</button>
+        <a href="#leaderboards" data-info-page="leaderboards">Доска лидеров</a>
         <a href="#rules" data-info-page="rules">Правила игры</a>
         <a href="#biographies" data-info-page="biographies">Биографии легенд</a>
         <a href="#photo-use" data-info-page="photo-use">Условия использования фото</a>

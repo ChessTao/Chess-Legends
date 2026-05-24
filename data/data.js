@@ -270,6 +270,7 @@ window.ChessLegendsData = {
   photoCredits: chessLegends.map((legend) => ({
     id: legend.id,
     name: legend.nameRu,
+    photo: legend.photo,
     source: legend.credits.source,
     license: legend.credits.license
   })),

@@ -63,7 +63,11 @@
       const { excludeIds = [], emptyText = "Нет сохраненных профилей" } = selectOptions;
       const profiles = listProfiles().filter((profile) => !excludeIds.includes(profile.id));
       const isOpponentSelect = select === player2Select;
-      const fallbackValue = selectedValue || (isOpponentSelect ? "" : profiles[0]?.id || "");
+      const fallbackValue = selectedValue || (
+        isOpponentSelect
+          ? profiles.length ? "" : GUEST_MATCH_PLAYER_ID
+          : profiles[0]?.id || ""
+      );
 
       select.replaceChildren();
 

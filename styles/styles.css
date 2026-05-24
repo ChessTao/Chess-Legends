@@ -165,6 +165,31 @@ h2 {
   width: min(94vw, 860px);
 }
 
+#accountScreen .profile-page {
+  width: min(94vw, 1220px);
+  gap: clamp(6px, 1vh, 10px);
+  padding: clamp(10px, 1.4vw, 18px);
+}
+
+#accountScreen .setup-header {
+  gap: 0;
+}
+
+#accountScreen .profile-logo {
+  font-size: clamp(1.75rem, 3.1vw, 2.85rem);
+  line-height: 0.95;
+}
+
+#accountScreen .setup-subtitle {
+  font-size: clamp(1.2rem, 2.2vw, 1.8rem);
+  line-height: 1;
+}
+
+#accountScreen .profile-panel {
+  gap: 7px;
+  padding: 10px;
+}
+
 #profileScreen .profile-page {
   max-height: calc(100dvh - clamp(28px, 6vw, 68px));
   overflow: visible;
@@ -295,51 +320,6 @@ h3 {
   cursor: pointer;
 }
 
-.profile-name-list[hidden] {
-  display: none;
-}
-
-.profile-name-list {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  z-index: 100;
-  max-height: min(230px, 34dvh);
-  overflow: auto;
-  padding: 6px;
-  border: 1px solid rgba(255, 244, 222, 0.58);
-  border-radius: 10px;
-  background: #fff7e8;
-  box-shadow: 0 14px 34px rgba(20, 8, 6, 0.32);
-}
-
-.profile-name-option {
-  width: 100%;
-  display: grid;
-  gap: 2px;
-  padding: 8px 10px;
-  border: 0;
-  border-radius: 8px;
-  color: #2c1710;
-  background: transparent;
-  font: 700 0.92rem/1.1 Georgia, "Times New Roman", serif;
-  text-align: left;
-  cursor: pointer;
-}
-
-.profile-name-option small {
-  color: rgba(44, 23, 16, 0.72);
-  font-size: 0.78rem;
-  font-weight: 400;
-}
-
-.profile-name-option:hover,
-.profile-name-option:focus {
-  outline: none;
-  background: #e7d9c1;
-}
-
 .profile-field select option {
   color: #2c1710;
   background: #fff7e8;
@@ -446,15 +426,13 @@ h3 {
 
 #accountScreen .profile-panel {
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 #accountScreen .profile-stats {
-  max-height: min(44dvh, 430px);
-  overflow: auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: visible;
   align-items: start;
-  padding-right: 12px;
-  scrollbar-gutter: stable;
 }
 
 .profile-stat {
@@ -470,6 +448,25 @@ h3 {
 
 .profile-stat-record {
   min-height: 188px;
+}
+
+#accountScreen .profile-stat {
+  min-height: 56px;
+  gap: 4px;
+  padding: 8px 10px;
+}
+
+#accountScreen .profile-stat-record {
+  min-height: 104px;
+}
+
+#accountScreen .profile-stat strong {
+  font-size: clamp(0.96rem, 1.6vw, 1.16rem);
+}
+
+#accountScreen .profile-stat small {
+  font-size: 0.69rem;
+  line-height: 1.18;
 }
 
 .profile-stat span {
@@ -1006,7 +1003,7 @@ h3 {
 }
 
 .info-page-panel {
-  width: min(94vw, 900px);
+  width: min(100%, 900px);
   grid-template-rows: auto minmax(0, 1fr);
 }
 
@@ -1021,13 +1018,85 @@ h3 {
 }
 
 .info-page.is-biographies .info-page-panel {
-  width: min(98vw, 1500px);
+  width: min(100%, 1500px);
   height: calc(100dvh - clamp(16px, 3vw, 32px));
   max-height: none;
   grid-template-rows: auto minmax(0, 1fr) auto;
   gap: clamp(8px, 1.4vh, 14px);
   padding: clamp(10px, 1.8vw, 18px);
   overflow: hidden;
+}
+
+.info-page.is-leaderboards {
+  align-items: start;
+  padding: 8px clamp(8px, 1.5vw, 16px) clamp(8px, 1.5vw, 16px);
+}
+
+.info-page.is-leaderboards .info-page-panel {
+  width: min(100%, 1380px);
+  max-height: calc(100dvh - 16px);
+  gap: 8px;
+  padding: 10px 14px 14px;
+}
+
+.info-page.is-leaderboards .profile-logo {
+  font-size: clamp(1.45rem, 3vw, 2.25rem);
+  line-height: 0.95;
+}
+
+.info-page.is-leaderboards .setup-subtitle {
+  font-size: clamp(1rem, 2vw, 1.45rem);
+  line-height: 1;
+}
+
+.info-page.is-leaderboards .setup-header {
+  gap: 1px;
+}
+
+.info-page.is-leaderboards .info-back-button {
+  min-height: 28px;
+  padding: 0 14px;
+  font-size: 0.82rem;
+}
+
+.info-page.is-leaderboards .info-article {
+  padding: 8px;
+}
+
+.info-page.is-photo-credits {
+  align-items: start;
+  padding: 8px clamp(8px, 1.5vw, 16px) clamp(8px, 1.5vw, 16px);
+}
+
+.info-page.is-photo-credits .info-page-panel {
+  width: min(100%, 1500px);
+  max-height: calc(100dvh - 16px);
+  gap: 8px;
+  padding: 10px 14px 14px;
+}
+
+.info-page.is-photo-credits .setup-header {
+  gap: 1px;
+}
+
+.info-page.is-photo-credits .profile-logo {
+  font-size: clamp(1.45rem, 3vw, 2.25rem);
+  line-height: 0.95;
+}
+
+.info-page.is-photo-credits .setup-subtitle {
+  font-size: clamp(1rem, 2vw, 1.45rem);
+  line-height: 1;
+}
+
+.info-page.is-photo-credits .info-back-button {
+  min-height: 28px;
+  padding: 0 14px;
+  font-size: 0.82rem;
+}
+
+.info-page.is-photo-credits .info-article {
+  padding: 8px;
 }
 
 .info-page.is-biographies .setup-header {
@@ -1201,42 +1270,250 @@ h3 {
   background: rgba(255, 224, 166, 0.2);
 }
 
-.credits-list {
+.credits-list,
+.credits-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: 8px;
-  max-height: min(46vh, 500px);
-  overflow: auto;
-  padding-right: 4px;
+}
+
+.credits-note {
+  margin: 0;
+  color: rgba(251, 241, 223, 0.84);
+  font-size: 0.84rem;
+  line-height: 1.25;
+}
+
+.credits-grid {
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
 }
 
 .credit-item {
+  position: relative;
   display: grid;
-  gap: 4px;
-  min-height: 92px;
-  align-content: start;
-  padding: 10px 12px;
+  place-items: stretch;
+  aspect-ratio: 1;
+  min-height: 0;
+  padding: 0;
+  border: 1px solid rgba(255, 244, 222, 0.58);
+  border-radius: 12px;
+  color: var(--walnut);
+  background: var(--ink);
+  font: 700 clamp(0.58rem, 0.9vw, 0.78rem)/1 Georgia, "Times New Roman", serif;
+  text-align: center;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 8px 18px rgba(14, 7, 5, 0.16);
+}
+
+.credit-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 18%;
+}
+
+.credit-item strong {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  min-height: 22px;
+  display: grid;
+  place-items: center;
+  padding: 3px 4px;
+  color: var(--walnut);
+  background: rgba(251, 241, 223, 0.88);
+  overflow-wrap: anywhere;
+}
+
+.credit-item span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 8px;
+  color: #fff7e8;
+  background: rgba(28, 13, 10, 0.86);
+  font-size: clamp(0.58rem, 0.8vw, 0.74rem);
+  line-height: 1.18;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.credit-item:hover,
+.credit-item:focus {
+  border-color: rgba(255, 248, 232, 0.96);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 232, 174, 0.26);
+}
+
+.credit-item:hover span,
+.credit-item:focus span {
+  opacity: 1;
+}
+
+.credits-reader {
+  display: grid;
+  gap: 12px;
+  padding: 4px 8px 2px 0;
+}
+
+.credits-reader h3,
+.credits-reader p {
+  margin: 0;
+}
+
+.credits-reader p {
+  user-select: text;
+}
+
+.leaderboards-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 8px;
+}
+
+.leaderboard-section {
+  display: grid;
+  gap: 5px;
+  min-height: 0;
+  padding: 9px;
   border: 1px solid rgba(255, 244, 222, 0.28);
   border-radius: 8px;
   background: rgba(255, 247, 232, 0.07);
 }
 
-.credit-item strong {
+.leaderboard-section h3 {
+  margin: 0;
   color: #fff7e8;
-  font-size: 0.98rem;
+  font-size: 0.96rem;
+}
+
+.leaderboard-table {
+  display: grid;
+  gap: 4px;
+}
+
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1.4fr) minmax(56px, 0.7fr) minmax(48px, 0.55fr);
+  gap: 6px;
+  align-items: center;
+  min-height: 24px;
+  padding: 4px 7px;
+  border-radius: 6px;
+  background: rgba(16, 8, 6, 0.16);
+}
+
+.leaderboard-head {
+  color: rgba(251, 241, 223, 0.66);
+  font-size: 0.63rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.leaderboard-row span,
+.leaderboard-row strong,
+.leaderboard-row button,
+.leaderboard-empty {
+  color: rgba(251, 241, 223, 0.84);
+  font-size: 0.74rem;
   line-height: 1.15;
 }
 
-.credit-item span,
-.credit-item small {
-  color: rgba(251, 241, 223, 0.78);
-  font-size: 0.82rem;
-  line-height: 1.25;
+.leaderboard-row strong,
+.leaderboard-row button {
+  color: #fff7e8;
+  overflow-wrap: anywhere;
 }
 
-.credit-item small {
-  color: rgba(255, 224, 166, 0.9);
-  font-weight: 700;
+.leaderboard-row button {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  color: #fff7e8;
+  background: transparent;
+  font: inherit;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.leaderboard-row button:hover,
+.leaderboard-row button:focus {
+  color: #ffe0a6;
+  outline: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.leaderboard-empty {
+  margin: 0;
+  padding: 8px;
+}
+
+.leaderboard-profile {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(255, 224, 166, 0.5);
+  border-radius: 8px;
+  background: rgba(16, 8, 6, 0.2);
+}
+
+.leaderboard-profile-head,
+.leaderboard-profile-details,
+.leaderboard-profile-records {
+  display: grid;
+  gap: 8px;
+}
+
+.leaderboard-profile-head {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.leaderboard-profile-head h3 {
+  margin: 0;
+}
+
+.leaderboard-profile-head button {
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 244, 222, 0.42);
+  border-radius: 999px;
+  color: #fff7e8;
+  background: rgba(255, 247, 232, 0.08);
+  font: 700 0.82rem/1 Georgia, "Times New Roman", serif;
+  cursor: pointer;
+}
+
+.leaderboard-profile-details,
+.leaderboard-profile-records {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.leaderboard-profile-details div,
+.leaderboard-profile-record {
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: rgba(255, 247, 232, 0.07);
+}
+
+.leaderboard-profile-details span,
+.leaderboard-profile-record span,
+.leaderboard-profile-record small {
+  color: rgba(251, 241, 223, 0.72);
+  font-size: 0.74rem;
+}
+
+.leaderboard-profile-details strong,
+.leaderboard-profile-record strong {
+  color: #fff7e8;
+  font-size: 0.95rem;
 }
 
 .project-links {
@@ -1253,7 +1530,8 @@ h3 {
   transform: translateY(-50%);
 }
 
-.project-links a {
+.project-links a,
+.project-links button {
   min-height: 34px;
   display: inline-grid;
   place-items: center;
@@ -1262,30 +1540,74 @@ h3 {
   border-radius: 999px;
   color: rgba(251, 241, 223, 0.84);
   background: rgba(16, 8, 6, 0.34);
+  font-family: inherit;
   font-size: 0.9rem;
   font-weight: 700;
   text-align: center;
   text-decoration: none;
   box-shadow: 0 10px 24px rgba(14, 7, 5, 0.2);
+  cursor: pointer;
 }
 
 .project-links a:hover,
-.project-links a:focus {
+.project-links a:focus,
+.project-links button:hover,
+.project-links button:focus {
   border-color: rgba(255, 244, 222, 0.82);
   color: #fff7e8;
   outline: none;
   background: rgba(255, 247, 232, 0.1);
 }
 
+.project-links #playFromInfoButton {
+  display: none;
+  border-color: rgba(90, 192, 128, 0.72);
+  color: #f0fff5;
+  background: rgba(28, 105, 61, 0.62);
+}
+
+.info-page.screen.is-active ~ .project-links #playFromInfoButton,
+#accountScreen.screen.is-active ~ .project-links #playFromInfoButton {
+  display: inline-grid;
+}
+
+.project-links #sideProfileButton {
+  border-color: rgba(255, 224, 166, 0.72);
+  color: #fff7e8;
+  background: rgba(255, 224, 166, 0.1);
+}
+
+.project-links #sideProfileButton[hidden] {
+  display: none;
+}
+
 @media (min-width: 900px) {
   .setup.screen.is-active,
-  .profile.screen.is-active {
+  .profile.screen.is-active,
+  .info-page.screen.is-active {
     padding-left: clamp(210px, 13vw, 250px);
   }
 
   .setup.screen.is-active .setup-panel,
-  .profile.screen.is-active .setup-panel {
+  .profile.screen.is-active .setup-panel,
+  .info-page.screen.is-active .setup-panel {
     width: min(100%, 1220px);
+  }
+
+  .info-page.screen.is-active .info-page-panel {
+    width: min(100%, 900px);
+  }
+
+  .info-page.screen.is-active.is-biographies .info-page-panel {
+    width: min(100%, 1500px);
+  }
+
+  .info-page.screen.is-active.is-leaderboards .info-page-panel {
+    width: min(100%, 1380px);
+  }
+
+  .info-page.screen.is-active.is-photo-credits .info-page-panel {
+    width: min(100%, 1500px);
   }
 
   .profile.screen.is-active .profile-page {
@@ -1310,7 +1632,10 @@ h3 {
 
   .game.screen.is-active ~ .project-links a,
   .setup.screen.is-active ~ .project-links a,
-  .profile.screen.is-active ~ .project-links a {
+  .profile.screen.is-active ~ .project-links a,
+  .game.screen.is-active ~ .project-links button,
+  .setup.screen.is-active ~ .project-links button,
+  .profile.screen.is-active ~ .project-links button {
     min-height: 32px;
     padding: 0 10px;
     font-size: 0.84rem;
@@ -1327,10 +1652,6 @@ h3 {
 }
 
 .intro.screen.is-active ~ .project-links {
-  display: none;
-}
-
-.info-page.screen.is-active ~ .project-links {
   display: none;
 }
 
@@ -1426,8 +1747,7 @@ h3 {
     padding-bottom: clamp(74px, 18vh, 112px);
   }
 
-  .intro.screen.is-active ~ .project-links,
-  .info-page.screen.is-active ~ .project-links {
+  .intro.screen.is-active ~ .project-links {
     display: none;
   }
 

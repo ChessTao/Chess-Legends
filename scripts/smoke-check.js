@@ -48,6 +48,10 @@ assert(gameIndex < scriptIndex, "game-preview.js must load before script.js");
 
 assertIncludes(indexHtml, 'id="backFromInfoButton"', "Info pages need a visible back button");
 assertIncludes(indexHtml, 'class="back-button info-back-button"', "Info back button must be in the header style");
+assertIncludes(indexHtml, 'id="playFromInfoButton"', "Info pages need a play button in the side panel");
+assertIncludes(indexHtml, 'id="sideProfileButton"', "Side panel should expose profile after login");
+assertIncludes(indexHtml, 'data-info-page="leaderboards"', "Side panel should expose leaderboards");
+assertIncludes(indexHtml, 'id="leaderboardsList"', "Leaderboards page needs a render target");
 assertIncludes(indexHtml, 'id="matchPlayer1Select" hidden', "Player 1 select should stay hidden in two-player setup");
 assertIncludes(indexHtml, '<span>Соперник</span>', "Two-player setup should expose one opponent field");
 
@@ -59,6 +63,13 @@ assertIncludes(scriptJs, "createMatchPlayersController", "script.js should use m
 assertIncludes(scriptJs, "createInfoPagesController", "script.js should use info-pages.js");
 assertIncludes(scriptJs, "ChessLegendsData.biographies", "script.js should read biographies from unified data");
 assertIncludes(scriptJs, "ChessLegendsData.photoCredits", "script.js should read photo credits from unified data");
+assertIncludes(scriptJs, "leaderboardsList", "script.js should wire leaderboards render target");
+assertIncludes(scriptJs, "updateSideProfileButton", "script.js should toggle side profile button");
+assertIncludes(scriptJs, "openAccountInNewTab", "Account button should not interrupt active games");
+assertIncludes(scriptJs, "requestedInfoPage", "New info tabs should restore requested info page");
+assertIncludes(scriptJs, "hasConfirmedProfile", "Play from info should respect confirmed profile state");
+assertIncludes(scriptJs, "showSetupScreen();", "Play from info should open setup for a confirmed profile");
+assertIncludes(scriptJs, "showProfileScreen();", "Play from info should open profile before confirmation");
 assert(!scriptJs.includes('const GUEST_MATCH_PLAYER_ID = "__guest__"'), "Guest id should live in match-players.js");
 assert(!scriptJs.includes("function renderMarkdown"), "Markdown rendering should live in info-pages.js");
 assert(!scriptJs.includes("function confirmProfileEntry"), "Profile entry flow should live in profile-form.js");

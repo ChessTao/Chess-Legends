@@ -18,95 +18,7 @@
       saveState,
       validatePassword,
     } = options;
-    const { confirmButton, modeButtons, nameList, profileElements } = elements;
-
-    function hideNameList() {
-      if (nameList) {
-        nameList.hidden = true;
-      }
-    }
-
-    function refreshNameList() {
-      if (!nameList) {
-        return;
-      }
-
-      const listItems = document.createDocumentFragment();
-
-      listProfiles().forEach((profile) => {
-        if (!profile.name) {
-          return;
-        }
-
-        const option = document.createElement("button");
-
-        option.className = "profile-name-option";
-        option.type = "button";
-        option.dataset.name = profile.name;
-        option.dataset.country = profile.country || "";
-
-        const nameText = document.createElement("strong");
-        nameText.textContent = profile.name;
-        option.append(nameText);
-
-        if (profile.country) {
-          const countryText = document.createElement("small");
-          countryText.textContent = `${profile.name}, ${profile.country}`;
-          option.append(countryText);
-        }
-
-        listItems.append(option);
-      });
-
-      nameList.replaceChildren(listItems);
-    }
-
-    function updateNameSuggestions() {
-      if (!nameList || profileElements.name.disabled) {
-        hideNameList();
-        return;
-      }
-
-      const query = normalizeProfileName(profileElements.name.value);
-      let visibleCount = 0;
-
-      nameList.querySelectorAll(".profile-name-option").forEach((option) => {
-        const name = normalizeProfileName(option.dataset.name || "");
-        const country = normalizeCountryName(option.dataset.country || "");
-        const isVisible = !query || name.includes(query) || country.includes(query);
-
-        option.hidden = !isVisible;
-        visibleCount += isVisible ? 1 : 0;
-      });
-
-      nameList.hidden = visibleCount === 0;
-    }
-
-    function selectNameOption(option) {
-      profileElements.name.value = option.dataset.name || "";
-      profileElements.country.value = option.dataset.country || "";
-      profileElements.password.value = "";
-      hideNameList();
-      onCurrentPlayerChange();
-    }
-
-    function enableNameInput() {
-      if (!profileElements.name.readOnly) {
-        return;
-      }
-
-      profileElements.name.readOnly = false;
-    }
-
-    function fillCountryFromProfileName() {
-      const profile = findProfileByName(profileElements.name.value);
-
-      if (!profile?.country) {
-        return;
-      }
-
-      profileElements.country.value = profile.country;
-    }
+    const { confirmButton, modeButtons, profileElements } = elements;
 
     function getMode() {
       return document.querySelector(".profile-mode.is-selected")?.dataset.value || "register";
@@ -133,7 +45,6 @@
       if (profileElements.passwordLabel) {
         profileElements.passwordLabel.textContent = isLogin ? "Пароль" : "Новый пароль";
       }
-      profileElements.name.readOnly = true;
       profileElements.subtitle.textContent = "Рекорды сохраняются на этом устройстве";
 
       normalizeProfileCountryField(profileElements);
@@ -144,7 +55,6 @@
       profileElements.password.value = "";
       renderProfile(profileElements, createBlankProfile());
       normalizeProfileCountryField(profileElements);
-      hideNameList();
     }
 
     async function login() {
@@ -217,7 +127,6 @@
         profileElements.password.value = "";
         renderProfile(profileElements, profile);
         renderProfile(accountElements, profile);
-        refreshNameList();
         setMode("register");
         onShowSetup();
       } catch (error) {
@@ -245,38 +154,11 @@
       await register();
     }
 
-    function bindNameList() {
-      nameList.addEventListener("mousedown", (event) => {
-        const option = event.target.closest(".profile-name-option");
-
-        if (!option) {
-          return;
-        }
-
-        event.preventDefault();
-        selectNameOption(option);
-      });
-
-      document.addEventListener("mousedown", (event) => {
-        if (event.target === profileElements.name || nameList.contains(event.target)) {
-          return;
-        }
-
-        hideNameList();
-      });
-    }
-
     return {
-      bindNameList,
       confirmEntry,
-      enableNameInput,
-      fillCountryFromProfileName,
       getMode,
-      hideNameList,
-      refreshNameList,
       resetForm,
-      setMode,
-      updateNameSuggestions
+      setMode
     };
   }
 

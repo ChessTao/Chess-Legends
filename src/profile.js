@@ -607,14 +607,10 @@
       return `
         <div class="profile-stat profile-stat-record">
           <span>${difficulty}</span>
-          <strong>${record.singleGames || 0}</strong>
-          <small>Одиночных партий</small>
-          <small>Лучшее время: ${formatTime(record.bestTime)}</small>
-          <small>Лучший результат: ${formatMoves(difficulty, record.bestMoves)}</small>
-          <small>Среднее время за всё время: ${formatTime(averageSeconds)}</small>
-          <small>Средние ходы за всё время: ${formatMoves(difficulty, averageMoves)}</small>
-          <small>Время за последние 5 игр: ${formatTime(recentAverageSeconds)}</small>
-          <small>Среднее количество ходов за последние 5 игр: ${formatMoves(difficulty, recentAverageMoves)}</small>
+          <strong>${record.singleGames || 0} игр</strong>
+          <small>Лучшее: ${formatTime(record.bestTime)} / ${formatMoves(difficulty, record.bestMoves)}</small>
+          <small>Среднее: ${formatTime(averageSeconds)} / ${formatMoves(difficulty, averageMoves)}</small>
+          <small>Последние 5: ${formatTime(recentAverageSeconds)} / ${formatMoves(difficulty, recentAverageMoves)}</small>
         </div>
       `;
     }).join("");
@@ -634,13 +630,10 @@
 
     elements.stats.innerHTML = `
       <div class="profile-stat">
-        <span>Матчевый рейтинг</span>
-        <strong>${profile.matchRating || defaultProfile.matchRating}</strong>
-      </div>
-      <div class="profile-stat">
-        <span>Матчи</span>
-        <strong>Матчи: ${profile.matchGamesPlayed || 0}</strong>
-        <small>Счёт: ${profile.twoPlayerWins || 0}-${profile.twoPlayerLosses || 0}</small>
+        <span>Матчевая статистика</span>
+        <strong>Рейтинг: ${profile.matchRating || defaultProfile.matchRating}</strong>
+        <small>Матчей: ${profile.matchGamesPlayed || 0}</small>
+        <small>Счет: ${profile.twoPlayerWins || 0}-${profile.twoPlayerLosses || 0}</small>
         <small>Ничьи: ${profile.twoPlayerDraws || 0}</small>
       </div>
       ${renderDifficultyRecords(profile)}

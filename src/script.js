@@ -31,6 +31,7 @@ const { initIntro } = window.ChessLegendsIntro;
 const { createInfoPagesController } = window.ChessLegendsInfoPages;
 
 const PROFILE_CLEANUP_KEY = "chessLegendsCleanupRemovedProfiles20260513";
+let hasConfirmedProfile = false;
 
 const introScreen = document.querySelector("#introScreen");
 const profileScreen = document.querySelector("#profileScreen");
@@ -56,7 +57,6 @@ const matchGuestName = document.querySelector("#matchGuestName");
 const matchGuestCountry = document.querySelector("#matchGuestCountry");
 const matchPlayersNotice = document.querySelector("#matchPlayersNotice");
 const countryList = document.querySelector("#countryList");
-const profileNameList = document.querySelector("#profileNameList");
 const gameChoice = document.querySelector("#gameChoice");
 const scorePanel = document.querySelector("#scorePanel");
 const memoryBoard = document.querySelector("#memoryBoard");
@@ -69,6 +69,9 @@ const backFromInfoButton = document.querySelector("#backFromInfoButton");
 const infoPageTitle = document.querySelector("#infoPageTitle");
 const infoArticles = document.querySelectorAll(".info-article");
 const projectLinks = document.querySelectorAll(".project-links a[data-info-page]");
+const playFromInfoButton = document.querySelector("#playFromInfoButton");
+const sideProfileButton = document.querySelector("#sideProfileButton");
+const leaderboardsList = document.querySelector("#leaderboardsList");
 const biographyList = document.querySelector("#biographyList");
 const biographyReader = document.querySelector("#biographyReader");
 const photoCreditsList = document.querySelector("#photoCreditsList");
@@ -160,7 +163,6 @@ const profileForm = createProfileFormController({
   elements: {
     confirmButton: confirmLoginButton,
     modeButtons: profileModeButtons,
-    nameList: profileNameList,
     profileElements
   },
   findProfileByName,
@@ -178,16 +180,10 @@ const profileForm = createProfileFormController({
 });
 
 const {
-  bindNameList: bindProfileNameList,
   confirmEntry: confirmProfileEntry,
-  enableNameInput: enableProfileNameInput,
-  fillCountryFromProfileName,
   getMode: getProfileMode,
-  hideNameList: hideProfileNameList,
-  refreshNameList: refreshProfileNameList,
   resetForm: resetProfileForm,
-  setMode: setProfileMode,
-  updateNameSuggestions: updateProfileNameSuggestions
+  setMode: setProfileMode
 } = profileForm;
 
 const matchPlayers = createMatchPlayersController({
@@ -231,10 +227,12 @@ const infoPages = createInfoPagesController({
     infoScreen,
     pageTitle: infoPageTitle,
     articles: infoArticles,
+    leaderboardsList,
     projectLinks
   },
   getActiveScreen,
   getScreenName,
+  listProfiles,
   onStateChange: saveState,
   screens: {
     profileScreen,
@@ -280,7 +278,6 @@ function handleStartupActions() {
     clearProfiles();
     resetProfileForm();
     setProfileMode("register");
-    refreshProfileNameList();
     updateCurrentPlayerLabel();
     url.searchParams.delete("resetProfiles");
     window.history.replaceState({}, "", url);
@@ -299,7 +296,6 @@ function handleStartupActions() {
       );
     });
     localStorage.setItem(PROFILE_CLEANUP_KEY, "1");
-    refreshProfileNameList();
   }
 
   if (url.searchParams.get("resetStats") !== "1") {
@@ -324,6 +320,12 @@ function saveState(screenName, extraState = {}) {
 
 function shouldRememberProfile() {
   return Boolean(profileElements.remember?.checked);
+}
+
+function updateSideProfileButton() {
+  if (sideProfileButton) {
+    sideProfileButton.hidden = !hasConfirmedProfile;
+  }
 }
 
 function findProfileByName(name) {
@@ -356,7 +358,7 @@ function updateCurrentPlayerLabel() {
   logoutProfileButton.hidden = false;
   currentPlayerLabel.replaceChildren();
 
-  const name = profileElements.name.value.trim() || "Игрок";
+  const name = profileElements.name.value.trim() || "Введите имя";
   const country = profileElements.country.value.trim();
   const countryInfo = getCountryInfo(country);
 
@@ -390,9 +392,10 @@ function showAccountScreen() {
 }
 
 function showSetupScreen() {
+  hasConfirmedProfile = true;
+  updateSideProfileButton();
   normalizeProfileCountryField(profileElements);
   saveProfileFromForm(profileElements);
-  refreshProfileNameList();
   renderProfile(accountElements, loadProfile());
   normalizeProfileCountryField(accountElements);
 
@@ -405,6 +408,8 @@ function showSetupScreen() {
 
 function logoutProfile() {
   stopGame();
+  hasConfirmedProfile = false;
+  updateSideProfileButton();
   profileElements.remember.checked = false;
   renderProfile(profileElements, createBlankProfile());
   setProfileMode("register");
@@ -420,7 +425,6 @@ function startGamePreview() {
 
   normalizeProfileCountryField(profileElements);
   saveProfileFromForm(profileElements);
-  refreshProfileNameList();
   updateCurrentPlayerLabel();
 
   renderGamePreview({
@@ -462,7 +466,12 @@ function restoreState() {
   const state = loadAppState();
   const shouldRestoreProfile = state.rememberProfile === true && hasSavedProfile();
   const savedScreenName = state.screen || "intro";
+  const startupUrl = new URL(window.location.href);
+  const requestedInfoPage = startupUrl.searchParams.get("infoPage");
+  const requestedScreen = startupUrl.searchParams.get("openScreen");
 
+  hasConfirmedProfile = shouldRestoreProfile && savedScreenName !== "intro" && savedScreenName !== "profile";
+  updateSideProfileButton();
   setGameSettings(state.settings);
   profileElements.remember.checked = shouldRestoreProfile;
   renderProfile(profileElements, shouldRestoreProfile ? loadProfile() : createBlankProfile());
@@ -473,6 +482,25 @@ function restoreState() {
   populateMatchPlayerControls(state.matchPlayers);
   updateMatchPlayersPanel();
   updateCurrentPlayerLabel();
+
+  if (requestedInfoPage) {
+    startupUrl.searchParams.delete("infoPage");
+    window.history.replaceState({}, "", startupUrl);
+    infoPages.restore(requestedInfoPage, getScreenByName("setup") || profileScreen);
+    return;
+  }
+
+  if (requestedScreen === "account" && hasSavedProfile()) {
+    startupUrl.searchParams.delete("openScreen");
+    window.history.replaceState({}, "", startupUrl);
+    hasConfirmedProfile = true;
+    updateSideProfileButton();
+    renderProfile(accountElements, loadProfile());
+    normalizeProfileCountryField(accountElements);
+    showScreen(accountScreen);
+    saveState("account");
+    return;
+  }
 
   if (savedScreenName === "info") {
     infoPages.restore(state.infoPage || "rules", getScreenByName(state.previousScreen) || profileScreen);
@@ -490,14 +518,20 @@ function restoreState() {
   showScreen(targetScreen);
 }
 
+function openAccountInNewTab() {
+  const url = new URL(window.location.href);
+
+  url.searchParams.set("openScreen", "account");
+  url.searchParams.delete("infoPage");
+  window.open(url.toString(), "_blank", "noopener");
+}
+
 initIntro(appLegends);
 initSetupControls();
 initCountryList();
-refreshProfileNameList();
 initProfile(profileElements);
 syncProfilesFromServer()
   .then(() => {
-    refreshProfileNameList();
     renderProfile(profileElements, loadProfile());
     normalizeProfileCountryField(profileElements);
     updateCurrentPlayerLabel();
@@ -516,6 +550,27 @@ registerProfileButton.addEventListener("click", () => setProfileMode("register")
 confirmLoginButton.addEventListener("click", confirmProfileEntry);
 
 infoPages.init();
+
+playFromInfoButton?.addEventListener("click", () => {
+  infoScreen.classList.remove("is-biographies");
+  infoScreen.classList.remove("is-leaderboards");
+  infoScreen.classList.remove("is-photo-credits");
+  if (hasConfirmedProfile) {
+    showSetupScreen();
+    return;
+  }
+
+  showProfileScreen();
+});
+
+sideProfileButton?.addEventListener("click", () => {
+  if (getActiveScreen(profileScreen) === gameScreen) {
+    openAccountInNewTab();
+    return;
+  }
+
+  showAccountScreen();
+});
 
 backToProfileButton.addEventListener("click", () => {
   showAccountScreen();
@@ -578,21 +633,8 @@ matchGuestCountry?.addEventListener("change", () => {
 });
 
 profileElements.name.addEventListener("input", () => {
-  fillCountryFromProfileName(profileElements.name, profileElements.country);
-  updateProfileNameSuggestions();
   updateCurrentPlayerLabel();
 });
-
-profileElements.name.addEventListener("pointerdown", () => {
-  enableProfileNameInput();
-});
-
-profileElements.name.addEventListener("focus", () => {
-  enableProfileNameInput();
-  updateProfileNameSuggestions();
-});
-
-bindProfileNameList();
 
 profileElements.country.addEventListener("input", updateCurrentPlayerLabel);
 

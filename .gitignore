@@ -1,4 +1,21 @@
-server.log
-server.error.log
-Тексты/
+# Runtime data and local logs
 .runtime/
+*.log
+
+# Local source materials and extraction leftovers
+Тексты/
+docx-full-extract.txt
+
+# Dependencies and generated output
+node_modules/
+dist/
+build/
+.cache/
+.vite/
+
+# Local secrets and machine files
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
