@@ -9,7 +9,7 @@
     <meta property="og:description" content="Memory-игра с шахматными легендами, локальными профилями и режимом для одного или двух игроков.">
     <meta property="og:type" content="website">
     <title>Шахматные Легенды</title>
-    <link rel="stylesheet" href="styles/styles.css">
+    <link rel="stylesheet" href="styles/styles.css?v=20260525-cursor">
     <link rel="stylesheet" href="styles/intro.css">
   </head>
   <body>
@@ -107,16 +107,71 @@
         </div>
       </section>
 
+      <section class="setup screen" id="playModeScreen" aria-label="Выбор режима игры">
+        <div class="setup-panel play-mode-panel">
+          <header class="setup-header">
+            <h2 class="profile-logo">Шахматные Легенды</h2>
+            <p class="setup-subtitle">Выберите формат</p>
+            <div class="setup-player">
+              <span id="modeCurrentPlayerLabel">Игрок: Игрок</span>
+              <button class="profile-link" id="modeProfileButton" type="button">Профиль</button>
+              <button class="profile-link" id="modeLogoutButton" type="button">Выйти</button>
+            </div>
+          </header>
+
+          <div class="play-mode-grid">
+            <button class="play-mode-card" id="soloModeButton" type="button">
+              <span class="play-mode-title">Играть одному</span>
+              <span class="play-mode-text">Классическая партия Memory с рекордами по времени и ходам.</span>
+            </button>
+            <button class="play-mode-card" id="onlineModeButton" type="button">
+              <span class="play-mode-title">Играть в сети</span>
+              <span class="play-mode-text">Создайте комнату или подключитесь к сопернику по коду.</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="setup screen" id="onlineScreen" aria-label="Сетевая игра">
+        <div class="setup-panel online-panel">
+          <header class="setup-header">
+            <h2 class="profile-logo">Шахматные Легенды</h2>
+            <p class="setup-subtitle">Сетевая игра</p>
+            <div class="setup-player">
+              <span id="onlineCurrentPlayerLabel">Игрок: Игрок</span>
+              <button class="profile-link" id="backToModeFromOnlineButton" type="button">Назад</button>
+            </div>
+          </header>
+
+          <section class="online-room-panel" aria-labelledby="onlineRoomTitle">
+            <div class="profile-head">
+              <div>
+                <h3 id="onlineRoomTitle">Комната матча</h3>
+                <p class="profile-subtitle">Сетевой матч выделен в отдельную ветку, чтобы не смешивать его с локальной игрой.</p>
+              </div>
+            </div>
+
+            <div class="online-room-grid">
+              <button class="online-room-action" id="createOnlineRoomButton" type="button">Создать комнату</button>
+              <label class="profile-field">
+                <span>Код комнаты</span>
+                <input id="onlineRoomCode" type="text" maxlength="12" autocomplete="off" placeholder="Например: A1B2C3">
+              </label>
+              <button class="online-room-action" id="joinOnlineRoomButton" type="button">Подключиться</button>
+            </div>
+
+            <p class="online-status" id="onlineStatus" aria-live="polite">
+              Сейчас это точка входа для сетевого режима. Следующий шаг - подключить серверные комнаты и синхронизацию ходов.
+            </p>
+          </section>
+        </div>
+      </section>
+
       <section class="setup screen" id="setupScreen" aria-label="Настройка игры">
         <div class="setup-panel">
           <header class="setup-header">
             <h2 class="profile-logo">Шахматные Легенды</h2>
-            <p class="setup-subtitle">Выберите игру</p>
-            <div class="setup-player">
-              <span id="currentPlayerLabel">Игрок: Игрок</span>
-              <button class="profile-link" id="backToProfileButton" type="button">Профиль</button>
-              <button class="profile-link" id="logoutProfileButton" type="button">Выйти</button>
-            </div>
+            <p class="setup-subtitle">Одиночная игра</p>
           </header>
 
           <div class="setup-grid">
@@ -134,7 +189,7 @@
               </div>
             </section>
 
-            <section class="option-group" aria-labelledby="modeTitle">
+            <section class="option-group" id="localModeGroup" aria-labelledby="modeTitle" hidden>
               <h3 id="modeTitle">Режим</h3>
               <div class="segmented-control" aria-label="Режим игры">
                 <button class="segment is-selected" type="button" data-value="Один игрок" aria-pressed="true">Один игрок</button>
@@ -176,6 +231,10 @@
           </div>
 
           <button class="play-button" id="playButton" type="button">НАЧАТЬ ИГРУ</button>
+          <div class="setup-corner-actions" aria-label="Действия одиночной игры">
+            <button class="profile-link" id="backToModeFromSetupButton" type="button">Играть по сети</button>
+            <button class="profile-link" id="logoutProfileButton" type="button">Выйти</button>
+          </div>
         </div>
       </section>
 
@@ -279,6 +338,7 @@
       </section>
 
       <section class="project-links" aria-label="Правила и условия использования">
+        <span class="side-player-label" id="currentPlayerLabel" hidden>Игрок: Игрок</span>
         <button type="button" id="playFromInfoButton">Играть</button>
         <button type="button" id="sideProfileButton" hidden>Мой профиль</button>
         <a href="#leaderboards" data-info-page="leaderboards">Доска лидеров</a>

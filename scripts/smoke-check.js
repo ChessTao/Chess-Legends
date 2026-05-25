@@ -50,6 +50,10 @@ assertIncludes(indexHtml, 'id="backFromInfoButton"', "Info pages need a visible 
 assertIncludes(indexHtml, 'class="back-button info-back-button"', "Info back button must be in the header style");
 assertIncludes(indexHtml, 'id="playFromInfoButton"', "Info pages need a play button in the side panel");
 assertIncludes(indexHtml, 'id="sideProfileButton"', "Side panel should expose profile after login");
+assertIncludes(indexHtml, 'id="playModeScreen"', "App should expose a post-login play mode screen");
+assertIncludes(indexHtml, 'id="soloModeButton"', "Play mode screen should expose solo play");
+assertIncludes(indexHtml, 'id="onlineModeButton"', "Play mode screen should expose online play");
+assertIncludes(indexHtml, 'id="onlineScreen"', "App should expose a separate online play screen");
 assertIncludes(indexHtml, 'data-info-page="leaderboards"', "Side panel should expose leaderboards");
 assertIncludes(indexHtml, 'id="leaderboardsList"', "Leaderboards page needs a render target");
 assertIncludes(indexHtml, 'id="matchPlayer1Select" hidden', "Player 1 select should stay hidden in two-player setup");
@@ -68,8 +72,10 @@ assertIncludes(scriptJs, "updateSideProfileButton", "script.js should toggle sid
 assertIncludes(scriptJs, "openAccountInNewTab", "Account button should not interrupt active games");
 assertIncludes(scriptJs, "requestedInfoPage", "New info tabs should restore requested info page");
 assertIncludes(scriptJs, "hasConfirmedProfile", "Play from info should respect confirmed profile state");
-assertIncludes(scriptJs, "showSetupScreen();", "Play from info should open setup for a confirmed profile");
+assertIncludes(scriptJs, "showPlayModeScreen();", "Play from info should open play mode choice for a confirmed profile");
 assertIncludes(scriptJs, "showProfileScreen();", "Play from info should open profile before confirmation");
+assertIncludes(scriptJs, "showOnlineScreen", "script.js should route online mode separately");
+assertIncludes(scriptJs, "createOnlineRoomCode", "Online mode should prepare room-code flow");
 assert(!scriptJs.includes('const GUEST_MATCH_PLAYER_ID = "__guest__"'), "Guest id should live in match-players.js");
 assert(!scriptJs.includes("function renderMarkdown"), "Markdown rendering should live in info-pages.js");
 assert(!scriptJs.includes("function confirmProfileEntry"), "Profile entry flow should live in profile-form.js");

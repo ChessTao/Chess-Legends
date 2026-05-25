@@ -44,7 +44,7 @@
     }
 
     function getSnapshot() {
-      const { player1Id, player2Id, player2IsGuest } = getSelection();
+      const { player1Id, player2Id, player2IsGuest, guestName, guestCountry } = getSelection();
       const player1Profile = getMatchPlayerProfile(player1Id);
       const player2Profile = getMatchPlayerProfile(player2Id);
 
@@ -52,10 +52,12 @@
         player1Id,
         player2Id: player2IsGuest ? "" : player2Id,
         player1Name: player1Profile?.name || "Игрок 1",
-        player2Name: player2IsGuest ? "Игрок 2" : player2Profile?.name || "Игрок 2",
+        player2Name: player2IsGuest ? guestName || "Игрок 2" : player2Profile?.name || "Игрок 2",
         player1Country: player1Profile?.country || "",
-        player2Country: player2IsGuest ? "" : player2Profile?.country || "",
-        player2IsGuest
+        player2Country: player2IsGuest ? guestCountry : player2Profile?.country || "",
+        player2IsGuest,
+        guestName: player2IsGuest ? guestName : "",
+        guestCountry: player2IsGuest ? guestCountry : ""
       };
     }
 
@@ -117,7 +119,9 @@
     function populateControls(savedSelection = {}) {
       const activeProfile = loadProfile();
       const player1Id = activeProfile.id || "";
-      let player2Id = getSavedProfileId(savedSelection.player2Id) || "";
+      let player2Id = savedSelection.player2IsGuest
+        ? GUEST_MATCH_PLAYER_ID
+        : getSavedProfileId(savedSelection.player2Id) || "";
 
       if (player2Id && player2Id === player1Id) {
         player2Id = "";
@@ -132,6 +136,17 @@
         excludeIds: [player1Id],
         emptyText: "Нет второго профиля"
       });
+
+      if (player2Id === GUEST_MATCH_PLAYER_ID) {
+        if (guestName) {
+          guestName.value = savedSelection.guestName || savedSelection.player2Name || "";
+        }
+
+        if (guestCountry) {
+          guestCountry.value = normalizeCountryValue(savedSelection.guestCountry || savedSelection.player2Country || "");
+        }
+      }
+
       updateGuestFields();
       updateNotice();
     }

@@ -36,6 +36,8 @@ let hasConfirmedProfile = false;
 const introScreen = document.querySelector("#introScreen");
 const profileScreen = document.querySelector("#profileScreen");
 const accountScreen = document.querySelector("#accountScreen");
+const playModeScreen = document.querySelector("#playModeScreen");
+const onlineScreen = document.querySelector("#onlineScreen");
 const setupScreen = document.querySelector("#setupScreen");
 const gameScreen = document.querySelector("#gameScreen");
 const infoScreen = document.querySelector("#infoScreen");
@@ -43,8 +45,20 @@ const startButton = document.querySelector("#startButton");
 const loginProfileButton = document.querySelector("#loginProfileButton");
 const registerProfileButton = document.querySelector("#registerProfileButton");
 const confirmLoginButton = document.querySelector("#confirmLoginButton");
+const soloModeButton = document.querySelector("#soloModeButton");
+const onlineModeButton = document.querySelector("#onlineModeButton");
+const modeProfileButton = document.querySelector("#modeProfileButton");
+const modeLogoutButton = document.querySelector("#modeLogoutButton");
+const modeCurrentPlayerLabel = document.querySelector("#modeCurrentPlayerLabel");
+const onlineCurrentPlayerLabel = document.querySelector("#onlineCurrentPlayerLabel");
+const backToModeFromOnlineButton = document.querySelector("#backToModeFromOnlineButton");
+const createOnlineRoomButton = document.querySelector("#createOnlineRoomButton");
+const joinOnlineRoomButton = document.querySelector("#joinOnlineRoomButton");
+const onlineRoomCode = document.querySelector("#onlineRoomCode");
+const onlineStatus = document.querySelector("#onlineStatus");
 const playButton = document.querySelector("#playButton");
 const backToProfileButton = document.querySelector("#backToProfileButton");
+const backToModeFromSetupButton = document.querySelector("#backToModeFromSetupButton");
 const backToSetupFromAccountButton = document.querySelector("#backToSetupFromAccountButton");
 const logoutProfileButton = document.querySelector("#logoutProfileButton");
 const backToSetup = document.querySelector("#backToSetup");
@@ -172,7 +186,7 @@ const profileForm = createProfileFormController({
   normalizeProfileCountryField,
   normalizeProfileName,
   onCurrentPlayerChange: updateCurrentPlayerLabel,
-  onShowSetup: showSetupScreen,
+  onShowSetup: showPlayModeScreen,
   registerProfileWithPassword,
   renderProfile,
   saveState,
@@ -313,6 +327,7 @@ function saveState(screenName, extraState = {}) {
     profileMode: shouldRememberProfile() ? getProfileMode() : "register",
     rememberProfile: shouldRememberProfile(),
     matchPlayers: getMatchPlayerSnapshot(),
+    onlineRoomCode: onlineRoomCode?.value.trim() || "",
     settings: getGameSettings(),
     ...extraState
   });
@@ -326,6 +341,25 @@ function updateSideProfileButton() {
   if (sideProfileButton) {
     sideProfileButton.hidden = !hasConfirmedProfile;
   }
+
+  if (currentPlayerLabel) {
+    currentPlayerLabel.hidden = !hasConfirmedProfile;
+  }
+}
+
+function createOnlineRoomCode() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = new Uint8Array(6);
+
+  if (window.crypto?.getRandomValues) {
+    window.crypto.getRandomValues(bytes);
+  } else {
+    for (let index = 0; index < bytes.length; index += 1) {
+      bytes[index] = Math.floor(Math.random() * alphabet.length);
+    }
+  }
+
+  return Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join("");
 }
 
 function findProfileByName(name) {
@@ -354,15 +388,17 @@ function recordSelectedMatchResult(result) {
   return { messages: [] };
 }
 
-function updateCurrentPlayerLabel() {
-  logoutProfileButton.hidden = false;
-  currentPlayerLabel.replaceChildren();
+function renderCurrentPlayerLabel(label) {
+  if (!label) {
+    return;
+  }
 
-  const name = profileElements.name.value.trim() || "Введите имя";
+  label.replaceChildren();
+  const name = profileElements.name.value.trim() || "Игрок";
   const country = profileElements.country.value.trim();
   const countryInfo = getCountryInfo(country);
 
-  currentPlayerLabel.append(`Игрок: ${name}`);
+  label.append(`Игрок: ${name}`);
 
   if (countryInfo) {
     const flag = document.createElement("img");
@@ -373,8 +409,17 @@ function updateCurrentPlayerLabel() {
     flag.loading = "lazy";
     flag.title = countryInfo.name;
     flag.setAttribute("aria-label", countryInfo.name);
-    currentPlayerLabel.append(" ", flag);
+    label.append(" ", flag);
   }
+}
+
+function updateCurrentPlayerLabel() {
+  logoutProfileButton.hidden = false;
+  if (modeLogoutButton) {
+    modeLogoutButton.hidden = false;
+  }
+
+  [currentPlayerLabel, modeCurrentPlayerLabel, onlineCurrentPlayerLabel].forEach(renderCurrentPlayerLabel);
 }
 
 function showProfileScreen() {
@@ -391,9 +436,26 @@ function showAccountScreen() {
   saveState("account");
 }
 
+function showPlayModeScreen() {
+  stopGame();
+  hasConfirmedProfile = true;
+  updateSideProfileButton();
+  normalizeProfileCountryField(profileElements);
+  saveProfileFromForm(profileElements);
+  renderProfile(accountElements, loadProfile());
+  normalizeProfileCountryField(accountElements);
+  updateCurrentPlayerLabel();
+  showScreen(playModeScreen);
+  saveState("mode");
+}
+
 function showSetupScreen() {
   hasConfirmedProfile = true;
   updateSideProfileButton();
+  setGameSettings({
+    ...getGameSettings(),
+    mode: "Один игрок"
+  });
   normalizeProfileCountryField(profileElements);
   saveProfileFromForm(profileElements);
   renderProfile(accountElements, loadProfile());
@@ -404,6 +466,17 @@ function showSetupScreen() {
   updateMatchPlayersPanel();
   showScreen(setupScreen);
   saveState("setup");
+}
+
+function showOnlineScreen() {
+  stopGame();
+  hasConfirmedProfile = true;
+  updateSideProfileButton();
+  normalizeProfileCountryField(profileElements);
+  saveProfileFromForm(profileElements);
+  updateCurrentPlayerLabel();
+  showScreen(onlineScreen);
+  saveState("online");
 }
 
 function logoutProfile() {
@@ -419,6 +492,11 @@ function logoutProfile() {
 }
 
 function startGamePreview() {
+  setGameSettings({
+    ...getGameSettings(),
+    mode: "Один игрок"
+  });
+
   if (!validateMatchPlayers()) {
     return;
   }
@@ -483,6 +561,10 @@ function restoreState() {
   updateMatchPlayersPanel();
   updateCurrentPlayerLabel();
 
+  if (onlineRoomCode && state.onlineRoomCode) {
+    onlineRoomCode.value = state.onlineRoomCode;
+  }
+
   if (requestedInfoPage) {
     startupUrl.searchParams.delete("infoPage");
     window.history.replaceState({}, "", startupUrl);
@@ -508,8 +590,14 @@ function restoreState() {
   }
 
   if (savedScreenName === "game") {
-    showScreen(setupScreen);
-    saveState("setup");
+    showScreen(hasConfirmedProfile ? playModeScreen : profileScreen);
+    saveState(hasConfirmedProfile ? "mode" : "profile");
+    return;
+  }
+
+  if ((savedScreenName === "mode" || savedScreenName === "online" || savedScreenName === "setup") && !hasConfirmedProfile) {
+    showScreen(profileScreen);
+    saveState("profile");
     return;
   }
 
@@ -556,7 +644,7 @@ playFromInfoButton?.addEventListener("click", () => {
   infoScreen.classList.remove("is-leaderboards");
   infoScreen.classList.remove("is-photo-credits");
   if (hasConfirmedProfile) {
-    showSetupScreen();
+    showPlayModeScreen();
     return;
   }
 
@@ -572,7 +660,38 @@ sideProfileButton?.addEventListener("click", () => {
   showAccountScreen();
 });
 
-backToProfileButton.addEventListener("click", () => {
+soloModeButton?.addEventListener("click", showSetupScreen);
+onlineModeButton?.addEventListener("click", showOnlineScreen);
+modeProfileButton?.addEventListener("click", showAccountScreen);
+modeLogoutButton?.addEventListener("click", logoutProfile);
+backToModeFromOnlineButton?.addEventListener("click", showPlayModeScreen);
+backToModeFromSetupButton?.addEventListener("click", showPlayModeScreen);
+
+createOnlineRoomButton?.addEventListener("click", () => {
+  const code = createOnlineRoomCode();
+
+  onlineRoomCode.value = code;
+  onlineStatus.textContent = `Комната ${code} подготовлена в интерфейсе. Для общего поля нужно подключить серверные комнаты и синхронизацию ходов.`;
+  saveState("online");
+});
+
+joinOnlineRoomButton?.addEventListener("click", () => {
+  const code = onlineRoomCode.value.trim().toUpperCase();
+
+  onlineRoomCode.value = code;
+
+  if (!code) {
+    onlineStatus.textContent = "Введите код комнаты, чтобы подключиться к сетевому матчу.";
+    onlineRoomCode.focus();
+    saveState("online");
+    return;
+  }
+
+  onlineStatus.textContent = `Код ${code} принят. Подключение станет активным после добавления серверной синхронизации.`;
+  saveState("online");
+});
+
+backToProfileButton?.addEventListener("click", () => {
   showAccountScreen();
 });
 
@@ -584,8 +703,8 @@ backToSetupFromAccountButton.addEventListener("click", () => {
   updateCurrentPlayerLabel();
   populateMatchPlayerControls(getMatchPlayerSelection());
   updateMatchPlayersPanel();
-  showScreen(setupScreen);
-  saveState("setup");
+  showScreen(playModeScreen);
+  saveState("mode");
 });
 
 logoutProfileButton.addEventListener("click", logoutProfile);
@@ -630,6 +749,11 @@ matchGuestCountry?.addEventListener("change", () => {
   matchGuestCountry.value = normalizeCountryValue(matchGuestCountry.value);
   updateMatchPlayerNotice();
   saveState("setup");
+});
+
+onlineRoomCode?.addEventListener("input", () => {
+  onlineRoomCode.value = onlineRoomCode.value.toUpperCase();
+  saveState("online");
 });
 
 profileElements.name.addEventListener("input", () => {

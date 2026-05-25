@@ -3,6 +3,8 @@
     intro: "introScreen",
     profile: "profileScreen",
     account: "accountScreen",
+    mode: "playModeScreen",
+    online: "onlineScreen",
     setup: "setupScreen",
     game: "gameScreen",
     info: "infoScreen"
