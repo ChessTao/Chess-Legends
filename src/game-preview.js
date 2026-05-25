@@ -1,24 +1,12 @@
 ﻿(() => {
   let state = null;
   let timerId = null;
-  let nextMatchStartingPlayer = 0;
-  let matchStartingKey = "";
 
   function formatTime(totalSeconds) {
     const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
     const seconds = String(totalSeconds % 60).padStart(2, "0");
 
     return `${minutes}:${seconds}`;
-  }
-
-  function escapeHtml(value) {
-    return String(value).replace(/[&<>"']/g, (character) => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      "\"": "&quot;",
-      "'": "&#039;"
-    }[character]));
   }
 
   function stopTimer() {
@@ -83,34 +71,8 @@
   }
 
   function updateScorePanel() {
-    const { scorePanel, settings, difficultySettings, matchedPairs, moves, seconds, scores, currentPlayer } = state;
+    const { scorePanel, settings, difficultySettings, matchedPairs, moves, seconds } = state;
     const { pairs } = difficultySettings[settings.difficulty];
-
-    if (settings.mode === "Два игрока") {
-      const player1Name = getMatchPlayerName(0);
-      const player2Name = getMatchPlayerName(1);
-      const currentPlayerName = getMatchPlayerName(currentPlayer);
-
-      scorePanel.innerHTML = `
-        <div class="score-card${currentPlayer === 0 ? " is-current" : ""}">
-          <span class="score-label">${escapeHtml(player1Name)}</span>
-          <strong>${scores[0]}</strong>
-        </div>
-        <div class="score-card${currentPlayer === 1 ? " is-current" : ""}">
-          <span class="score-label">${escapeHtml(player2Name)}</span>
-          <strong>${scores[1]}</strong>
-        </div>
-        <div class="score-card">
-          <span class="score-label">Ход</span>
-          <strong>${escapeHtml(currentPlayerName)}</strong>
-        </div>
-        <div class="score-card">
-          <span class="score-label">Ходы</span>
-          <strong>${moves}</strong>
-        </div>
-      `;
-      return;
-    }
 
     scorePanel.innerHTML = `
       <div class="score-card">
@@ -126,18 +88,6 @@
         <strong>${matchedPairs} / ${pairs}</strong>
       </div>
     `;
-  }
-
-  function getMatchPlayerName(playerIndex) {
-    const fallbackName = `Игрок ${playerIndex + 1}`;
-
-    if (!state?.matchPlayers) {
-      return fallbackName;
-    }
-
-    return playerIndex === 0
-      ? state.matchPlayers.player1Name || fallbackName
-      : state.matchPlayers.player2Name || fallbackName;
   }
 
   function setCardOpen(index, isOpen) {
@@ -160,10 +110,10 @@
   }
 
   function showResult() {
-    const { resultPanel, resultTitle, resultSummary, settings, scores, moves, seconds, onGameComplete } = state;
+    const { resultPanel, resultTitle, resultSummary, settings, moves, seconds, onGameComplete } = state;
     const result = {
       settings,
-      scores: [...scores],
+      scores: [0],
       winner: null,
       moves,
       seconds
@@ -172,18 +122,8 @@
     stopTimer();
     state.isComplete = true;
 
-    if (settings.mode === "Два игрока") {
-      result.winner = scores[0] === scores[1] ? null : scores[0] > scores[1] ? 0 : 1;
-      const player1Name = getMatchPlayerName(0);
-      const player2Name = getMatchPlayerName(1);
-      const resultText = result.winner === null ? "Ничья" : `Победил ${getMatchPlayerName(result.winner)}`;
-
-      resultTitle.textContent = resultText;
-      resultSummary.textContent = `Счет ${player1Name} ${scores[0]}:${scores[1]} ${player2Name}, всего ходов: ${moves}.`;
-    } else {
-      resultTitle.textContent = "Все пары найдены";
-      resultSummary.textContent = `Время: ${formatTime(seconds)}. Ходы: ${moves}.`;
-    }
+    resultTitle.textContent = "Все пары найдены";
+    resultSummary.textContent = `Время: ${formatTime(seconds)}. Ходы: ${moves}.`;
 
     if (onGameComplete) {
       const profileResult = onGameComplete(result);
@@ -202,10 +142,6 @@
 
     setCardMatched(firstIndex);
     setCardMatched(secondIndex);
-
-    if (state.settings.mode === "Два игрока") {
-      state.scores[state.currentPlayer] += 1;
-    }
 
     state.openCards = [];
     state.isLocked = false;
@@ -227,10 +163,6 @@
       setCardOpen(firstIndex, false);
       setCardOpen(secondIndex, false);
 
-      if (state.settings.mode === "Два игрока") {
-        state.currentPlayer = state.currentPlayer === 0 ? 1 : 0;
-      }
-
       state.openCards = [];
       state.isLocked = false;
       updateScorePanel();
@@ -250,7 +182,7 @@
       return;
     }
 
-    if (!timerId && state.settings.mode === "Один игрок") {
+    if (!timerId) {
       startTimer();
     }
 
@@ -289,32 +221,6 @@
     resultPanel.setAttribute("aria-hidden", "true");
   }
 
-  function getMatchStartingKey(settings, matchPlayers) {
-    if (settings.mode !== "Два игрока" || !matchPlayers) {
-      return "";
-    }
-
-    return `${matchPlayers.player1Id || ""}:${matchPlayers.player2Id || ""}`;
-  }
-
-  function getStartingPlayer(settings, matchPlayers) {
-    const startingKey = getMatchStartingKey(settings, matchPlayers);
-
-    if (!startingKey) {
-      return 0;
-    }
-
-    if (startingKey !== matchStartingKey) {
-      matchStartingKey = startingKey;
-      nextMatchStartingPlayer = 0;
-    }
-
-    const startingPlayer = nextMatchStartingPlayer;
-    nextMatchStartingPlayer = nextMatchStartingPlayer === 0 ? 1 : 0;
-
-    return startingPlayer;
-  }
-
   function renderGamePreview(options) {
     const {
       settings,
@@ -330,8 +236,7 @@
       changeSettingsButton,
       onGameComplete,
       showSetup,
-      shuffle,
-      matchPlayers
+      shuffle
     } = options;
     const { pairs, columns } = difficultySettings[settings.difficulty];
     const cards = buildDeck(settings, legends, difficultySettings, shuffle);
@@ -354,7 +259,6 @@
 
     state = {
       settings,
-      matchPlayers,
       cards,
       legends,
       difficultySettings,
@@ -369,8 +273,6 @@
       matchedPairs: 0,
       moves: 0,
       seconds: 0,
-      currentPlayer: getStartingPlayer(settings, matchPlayers),
-      scores: [0, 0],
       isLocked: false,
       isComplete: false
     };

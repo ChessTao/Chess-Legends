@@ -260,6 +260,31 @@ h3 {
   width: min(94vw, 940px);
 }
 
+.online-panel {
+  position: relative;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 8px;
+  max-height: calc(100dvh - clamp(16px, 3vw, 32px));
+  padding: clamp(10px, 1.5vw, 18px) clamp(16px, 2vw, 24px) clamp(58px, 7vh, 72px);
+}
+
+#onlineScreen .setup-header {
+  gap: 0;
+}
+
+#onlineScreen .profile-logo {
+  font-size: clamp(1.8rem, 3.7vw, 3.1rem);
+  line-height: 0.86;
+}
+
+#onlineScreen .setup-subtitle {
+  font-size: clamp(1.35rem, 2.7vw, 2.25rem);
+}
+
+#onlineScreen .setup-player {
+  font-size: 0.86rem;
+}
+
 .play-mode-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -267,6 +292,7 @@ h3 {
 }
 
 .play-mode-card,
+.online-room-card,
 .online-room-action {
   font-family: Georgia, "Times New Roman", serif;
   cursor: pointer;
@@ -309,19 +335,119 @@ h3 {
 }
 
 .online-room-panel {
+  min-height: 0;
   display: grid;
-  gap: 16px;
-  padding: 16px;
+  gap: 12px;
+  padding: 12px;
   border: 1px solid rgba(255, 244, 222, 0.42);
   border-radius: 14px;
   background: rgba(16, 8, 6, 0.2);
+  overflow: auto;
 }
 
-.online-room-grid {
+.online-room-list,
+.online-room-group,
+.online-private-panel,
+.online-private-room {
   display: grid;
-  grid-template-columns: minmax(150px, 0.8fr) minmax(0, 1fr) minmax(150px, 0.8fr);
   gap: 10px;
+}
+
+.online-room-list {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.online-room-group {
+  align-content: start;
+  gap: 2px;
+  padding: 0 10px 0 0;
+  border-right: 1px solid rgba(255, 244, 222, 0.22);
+}
+
+.online-room-group:last-child {
+  padding-right: 0;
+  border-right: 0;
+}
+
+.online-room-group h4 {
+  margin: 0 0 3px;
+  color: var(--paper);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.online-room-card {
+  min-height: 29px;
+  display: grid;
+  align-items: center;
+  padding: 0 2px;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 244, 222, 0.16);
+  border-radius: 0;
+  color: var(--ink);
+  background: transparent;
+  text-align: left;
+  transition: color 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.online-room-card:hover,
+.online-room-card:focus,
+.online-room-card.is-selected {
+  border-color: rgba(255, 248, 232, 0.72);
+  outline: none;
+  background: rgba(255, 247, 232, 0.06);
+}
+
+.online-room-card.is-selected {
+  background: rgba(255, 247, 232, 0.1);
+}
+
+.online-room-card.is-busy {
+  opacity: 0.58;
+}
+
+.online-room-card span {
+  color: #fff7e8;
+  font-size: clamp(0.96rem, 1.35vw, 1.12rem);
+  font-weight: 700;
+  line-height: 1;
+  overflow-wrap: anywhere;
+}
+
+.online-room-card.is-selected span {
+  color: #ffe0a6;
+}
+
+.online-private-panel {
+  gap: 8px;
+  margin-top: 2px;
+  padding: 12px;
+  border: 1px solid rgba(255, 224, 166, 0.28);
+  border-radius: 10px;
+  background: rgba(16, 8, 6, 0.24);
+}
+
+.online-private-panel h3 {
+  margin: 0;
+  color: #fff7e8;
+  font-size: 0.98rem;
+  line-height: 1;
+}
+
+.online-private-panel .profile-subtitle {
+  margin-top: 3px;
+}
+
+.online-private-room {
+  grid-template-columns: minmax(0, 1fr) minmax(130px, 0.6fr) minmax(0, 1fr) minmax(168px, 0.7fr);
   align-items: end;
+}
+
+.online-private-room .profile-field:nth-of-type(4) {
+  grid-column: 1 / 2;
 }
 
 .online-room-action {
@@ -481,35 +607,6 @@ h3 {
   display: none;
 }
 
-.match-players[hidden] {
-  display: none;
-}
-
-.match-player-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 10px;
-  align-items: end;
-}
-
-.match-guest-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  align-items: end;
-}
-
-.match-guest-grid[hidden] {
-  display: none;
-}
-
-.match-player-note {
-  min-height: 1.2em;
-  margin: 0;
-  color: rgba(251, 241, 223, 0.74);
-  font-size: 0.86rem;
-}
-
 .account-form .profile-field input[readonly] {
   cursor: default;
   opacity: 0.78;
@@ -603,7 +700,6 @@ h3 {
 }
 
 .option-card,
-.segment,
 .difficulty,
 .profile-mode,
 .play-button {
@@ -640,7 +736,6 @@ h3 {
 }
 
 .option-card:hover,
-.segment:hover,
 .difficulty:hover,
 .profile-mode:hover {
   border-color: rgba(255, 244, 222, 0.88);
@@ -648,7 +743,6 @@ h3 {
 }
 
 .option-card.is-selected,
-.segment.is-selected,
 .difficulty.is-selected,
 .profile-mode.is-selected {
   border-color: rgba(255, 248, 232, 0.96);
@@ -679,7 +773,6 @@ h3 {
   color: rgba(59, 29, 25, 0.72);
 }
 
-.segmented-control,
 .difficulty-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -690,7 +783,6 @@ h3 {
   background: rgba(16, 8, 6, 0.24);
 }
 
-.segment,
 .difficulty,
 .profile-mode {
   min-height: 40px;
@@ -703,7 +795,6 @@ h3 {
   transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
 }
 
-#setupScreen .segment,
 #setupScreen .difficulty {
   min-height: 42px;
   font-size: clamp(1.02rem, 2vw, 1.28rem);
@@ -777,8 +868,7 @@ h3 {
     align-items: start;
   }
 
-  #setupScreen .option-group:first-child,
-  #setupScreen .match-players {
+  #setupScreen .option-group:first-child {
     grid-column: 1 / -1;
   }
 }
@@ -918,6 +1008,11 @@ h3 {
   display: grid;
   grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
   gap: clamp(5px, 0.85vw, 10px);
+}
+
+.memory-board.is-waiting-turn .memory-card:not(.is-open):not(.is-matched) {
+  cursor: wait;
+  opacity: 0.72;
 }
 
 .memory-board[data-size="large"] {
@@ -1349,6 +1444,15 @@ h3 {
 }
 
 @media (max-width: 1180px) {
+  .online-room-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .online-room-group:nth-child(2n) {
+    padding-right: 0;
+    border-right: 0;
+  }
+
   .biography-list {
     width: min(100%, 980px);
     grid-template-columns: repeat(8, minmax(0, 1fr));
@@ -1800,7 +1904,6 @@ h3 {
   }
 
   .option-row,
-  .segmented-control,
   .difficulty-row {
     grid-template-columns: 1fr;
     border-radius: 16px;
@@ -1836,18 +1939,30 @@ h3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .match-player-grid,
-  .match-guest-grid,
   .play-mode-grid,
-  .online-room-grid {
+  .online-room-list,
+  .online-room-group,
+  .online-private-panel,
+  .online-private-room {
     grid-template-columns: 1fr;
   }
 
-  .segment,
   .difficulty,
   .profile-mode,
   .profile-choice {
     border-radius: 12px;
+  }
+
+  .online-room-group {
+    padding-right: 0;
+    padding-bottom: 8px;
+    border-right: 0;
+    border-bottom: 1px solid rgba(255, 244, 222, 0.22);
+  }
+
+  .online-room-group:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
   }
 
   .game-shell {

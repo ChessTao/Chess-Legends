@@ -12,8 +12,6 @@ const {
   loadProfile,
   initProfile,
   loginProfileWithPassword,
-  recordMatchResult,
-  recordProfileResult,
   registerProfileWithPassword,
   renderProfile,
   removeProfiles,
@@ -25,10 +23,11 @@ const {
   validatePassword
 } = window.ChessLegendsProfile;
 const { createProfileFormController } = window.ChessLegendsProfileForm;
-const { createMatchPlayersController } = window.ChessLegendsMatchPlayers;
 const { renderGamePreview, stopGame } = window.ChessLegendsGamePreview;
 const { initIntro } = window.ChessLegendsIntro;
 const { createInfoPagesController } = window.ChessLegendsInfoPages;
+const { createOnlineLobbyController } = window.ChessLegendsOnlineLobby;
+const { createOnlineGameController } = window.ChessLegendsOnlineGame;
 
 const PROFILE_CLEANUP_KEY = "chessLegendsCleanupRemovedProfiles20260513";
 let hasConfirmedProfile = false;
@@ -51,11 +50,6 @@ const modeProfileButton = document.querySelector("#modeProfileButton");
 const modeLogoutButton = document.querySelector("#modeLogoutButton");
 const modeCurrentPlayerLabel = document.querySelector("#modeCurrentPlayerLabel");
 const onlineCurrentPlayerLabel = document.querySelector("#onlineCurrentPlayerLabel");
-const backToModeFromOnlineButton = document.querySelector("#backToModeFromOnlineButton");
-const createOnlineRoomButton = document.querySelector("#createOnlineRoomButton");
-const joinOnlineRoomButton = document.querySelector("#joinOnlineRoomButton");
-const onlineRoomCode = document.querySelector("#onlineRoomCode");
-const onlineStatus = document.querySelector("#onlineStatus");
 const playButton = document.querySelector("#playButton");
 const backToProfileButton = document.querySelector("#backToProfileButton");
 const backToModeFromSetupButton = document.querySelector("#backToModeFromSetupButton");
@@ -63,13 +57,6 @@ const backToSetupFromAccountButton = document.querySelector("#backToSetupFromAcc
 const logoutProfileButton = document.querySelector("#logoutProfileButton");
 const backToSetup = document.querySelector("#backToSetup");
 const currentPlayerLabel = document.querySelector("#currentPlayerLabel");
-const matchPlayersPanel = document.querySelector("#matchPlayersPanel");
-const matchPlayer1Select = document.querySelector("#matchPlayer1Select");
-const matchPlayer2Select = document.querySelector("#matchPlayer2Select");
-const matchGuestFields = document.querySelector("#matchGuestFields");
-const matchGuestName = document.querySelector("#matchGuestName");
-const matchGuestCountry = document.querySelector("#matchGuestCountry");
-const matchPlayersNotice = document.querySelector("#matchPlayersNotice");
 const countryList = document.querySelector("#countryList");
 const gameChoice = document.querySelector("#gameChoice");
 const scorePanel = document.querySelector("#scorePanel");
@@ -200,36 +187,6 @@ const {
   setMode: setProfileMode
 } = profileForm;
 
-const matchPlayers = createMatchPlayersController({
-  elements: {
-    panel: matchPlayersPanel,
-    player1Select: matchPlayer1Select,
-    player2Select: matchPlayer2Select,
-    guestFields: matchGuestFields,
-    guestName: matchGuestName,
-    guestCountry: matchGuestCountry,
-    notice: matchPlayersNotice
-  },
-  getGameSettings,
-  getProfile,
-  listProfiles,
-  loadProfile,
-  normalizeCountryValue,
-  normalizeProfileName
-});
-
-const {
-  clearGuestFields: clearGuestMatchFields,
-  getSelection: getMatchPlayerSelection,
-  getSnapshot: getMatchPlayerSnapshot,
-  isGuestSelected: isGuestMatchPlayerSelected,
-  isMatchModeSelected,
-  populateControls: populateMatchPlayerControls,
-  updateNotice: updateMatchPlayerNotice,
-  updatePanel: updateMatchPlayersPanel,
-  validate: validateMatchPlayers
-} = matchPlayers;
-
 const infoPages = createInfoPagesController({
   biographyItems,
   photoCredits,
@@ -254,6 +211,53 @@ const infoPages = createInfoPagesController({
     gameScreen
   },
   showScreen
+});
+
+const onlineLobby = createOnlineLobbyController({
+  elements: {
+    roomList: document.querySelector("#onlineRoomList"),
+    roomName: document.querySelector("#onlineRoomName"),
+    roomLevel: document.querySelector("#onlineRoomLevel"),
+    roomPassword: document.querySelector("#onlineRoomPassword"),
+    roomCode: document.querySelector("#onlineRoomCode"),
+    status: document.querySelector("#onlineStatus"),
+    createPrivateButton: document.querySelector("#createPrivateRoomButton"),
+    joinPrivateButton: document.querySelector("#joinPrivateRoomButton"),
+    logoutButton: document.querySelector("#onlineLogoutProfileButton"),
+    soloButton: document.querySelector("#onlineSoloModeButton")
+  },
+  getProfile: getProfileForOnline,
+  onLogout: logoutProfile,
+  onRoomJoined: startOnlineGame,
+  onShowSolo: showSetupScreen,
+  onStateChange: saveState
+});
+
+const onlineGame = createOnlineGameController({
+  elements: {
+    gameChoice,
+    scorePanel,
+    memoryBoard,
+    resultPanel,
+    resultTitle,
+    resultSummary,
+    replayButton,
+    changeSettingsButton
+  },
+  difficultySettings: appDifficultySettings,
+  onBackToLobby: () => {
+    onlineGame.stop();
+    showOnlineScreen();
+  },
+  onComplete: () => {
+    syncProfilesFromServer()
+      .then(() => {
+        renderProfile(profileElements, loadProfile());
+        renderProfile(accountElements, loadProfile());
+      })
+      .catch(() => {});
+  },
+  onStateChange: saveState
 });
 
 function getFlagUrl(countryCode) {
@@ -326,8 +330,8 @@ function saveState(screenName, extraState = {}) {
     screen: screenName,
     profileMode: shouldRememberProfile() ? getProfileMode() : "register",
     rememberProfile: shouldRememberProfile(),
-    matchPlayers: getMatchPlayerSnapshot(),
-    onlineRoomCode: onlineRoomCode?.value.trim() || "",
+    ...onlineLobby.getSnapshot(),
+    ...onlineGame.getSnapshot(),
     settings: getGameSettings(),
     ...extraState
   });
@@ -347,21 +351,6 @@ function updateSideProfileButton() {
   }
 }
 
-function createOnlineRoomCode() {
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const bytes = new Uint8Array(6);
-
-  if (window.crypto?.getRandomValues) {
-    window.crypto.getRandomValues(bytes);
-  } else {
-    for (let index = 0; index < bytes.length; index += 1) {
-      bytes[index] = Math.floor(Math.random() * alphabet.length);
-    }
-  }
-
-  return Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join("");
-}
-
 function findProfileByName(name) {
   const normalizedName = normalizeProfileName(name);
 
@@ -370,22 +359,6 @@ function findProfileByName(name) {
   }
 
   return listProfiles().find((profile) => normalizeProfileName(profile.name || "") === normalizedName) || null;
-}
-
-function recordSelectedMatchResult(result) {
-  const { player1Id, player2Id, player2IsGuest } = getMatchPlayerSelection();
-
-  if (player1Id && player2Id && !player2IsGuest) {
-    recordMatchResult(player1Id, player2Id, result);
-  } else if (player1Id && player2IsGuest) {
-    recordProfileResult(player1Id, result);
-  }
-
-  const activeProfile = loadProfile();
-
-  renderProfile(profileElements, activeProfile);
-  renderProfile(accountElements, activeProfile);
-  return { messages: [] };
 }
 
 function renderCurrentPlayerLabel(label) {
@@ -424,12 +397,14 @@ function updateCurrentPlayerLabel() {
 
 function showProfileScreen() {
   stopGame();
+  onlineGame.stop();
   showScreen(profileScreen);
   saveState("profile");
 }
 
 function showAccountScreen() {
   stopGame();
+  onlineGame.stop({ leave: false });
   renderProfile(accountElements, loadProfile());
   normalizeProfileCountryField(accountElements);
   showScreen(accountScreen);
@@ -438,6 +413,7 @@ function showAccountScreen() {
 
 function showPlayModeScreen() {
   stopGame();
+  onlineGame.stop();
   hasConfirmedProfile = true;
   updateSideProfileButton();
   normalizeProfileCountryField(profileElements);
@@ -451,6 +427,7 @@ function showPlayModeScreen() {
 
 function showSetupScreen() {
   hasConfirmedProfile = true;
+  onlineGame.stop();
   updateSideProfileButton();
   setGameSettings({
     ...getGameSettings(),
@@ -462,14 +439,13 @@ function showSetupScreen() {
   normalizeProfileCountryField(accountElements);
 
   updateCurrentPlayerLabel();
-  populateMatchPlayerControls(getMatchPlayerSelection());
-  updateMatchPlayersPanel();
   showScreen(setupScreen);
   saveState("setup");
 }
 
 function showOnlineScreen() {
   stopGame();
+  onlineGame.stop({ leave: false });
   hasConfirmedProfile = true;
   updateSideProfileButton();
   normalizeProfileCountryField(profileElements);
@@ -481,6 +457,7 @@ function showOnlineScreen() {
 
 function logoutProfile() {
   stopGame();
+  onlineGame.stop();
   hasConfirmedProfile = false;
   updateSideProfileButton();
   profileElements.remember.checked = false;
@@ -492,14 +469,11 @@ function logoutProfile() {
 }
 
 function startGamePreview() {
+  onlineGame.stop();
   setGameSettings({
     ...getGameSettings(),
     mode: "Один игрок"
   });
-
-  if (!validateMatchPlayers()) {
-    return;
-  }
 
   normalizeProfileCountryField(profileElements);
   saveProfileFromForm(profileElements);
@@ -507,7 +481,6 @@ function startGamePreview() {
 
   renderGamePreview({
     settings: getGameSettings(),
-    matchPlayers: isMatchModeSelected() ? getMatchPlayerSnapshot() : null,
     legends: appLegends,
     difficultySettings: appDifficultySettings,
     gameChoice,
@@ -519,10 +492,6 @@ function startGamePreview() {
     replayButton,
     changeSettingsButton,
     onGameComplete: (result) => {
-      if (result.settings.mode === "Два игрока") {
-        return recordSelectedMatchResult(result);
-      }
-
       const profileResult = updateProfileWithResult(result);
 
       renderProfile(profileElements, profileResult.profile);
@@ -538,6 +507,22 @@ function startGamePreview() {
   });
   showScreen(gameScreen);
   saveState("game");
+}
+
+function getProfileForOnline() {
+  normalizeProfileCountryField(profileElements);
+  saveProfileFromForm(profileElements);
+  updateCurrentPlayerLabel();
+  return loadProfile();
+}
+
+function startOnlineGame(room, playerToken) {
+  stopGame();
+  hasConfirmedProfile = true;
+  updateSideProfileButton();
+  onlineGame.start(room, playerToken);
+  showScreen(gameScreen);
+  saveState("onlineGame");
 }
 
 function restoreState() {
@@ -557,13 +542,9 @@ function restoreState() {
   normalizeProfileCountryField(profileElements);
   normalizeProfileCountryField(accountElements);
   setProfileMode(shouldRestoreProfile ? state.profileMode || "register" : "register");
-  populateMatchPlayerControls(state.matchPlayers);
-  updateMatchPlayersPanel();
   updateCurrentPlayerLabel();
 
-  if (onlineRoomCode && state.onlineRoomCode) {
-    onlineRoomCode.value = state.onlineRoomCode;
-  }
+  onlineLobby.restore(state);
 
   if (requestedInfoPage) {
     startupUrl.searchParams.delete("infoPage");
@@ -589,7 +570,7 @@ function restoreState() {
     return;
   }
 
-  if (savedScreenName === "game") {
+  if (savedScreenName === "game" || savedScreenName === "onlineGame") {
     showScreen(hasConfirmedProfile ? playModeScreen : profileScreen);
     saveState(hasConfirmedProfile ? "mode" : "profile");
     return;
@@ -638,6 +619,8 @@ registerProfileButton.addEventListener("click", () => setProfileMode("register")
 confirmLoginButton.addEventListener("click", confirmProfileEntry);
 
 infoPages.init();
+onlineLobby.init();
+onlineGame.init();
 
 playFromInfoButton?.addEventListener("click", () => {
   infoScreen.classList.remove("is-biographies");
@@ -664,32 +647,7 @@ soloModeButton?.addEventListener("click", showSetupScreen);
 onlineModeButton?.addEventListener("click", showOnlineScreen);
 modeProfileButton?.addEventListener("click", showAccountScreen);
 modeLogoutButton?.addEventListener("click", logoutProfile);
-backToModeFromOnlineButton?.addEventListener("click", showPlayModeScreen);
-backToModeFromSetupButton?.addEventListener("click", showPlayModeScreen);
-
-createOnlineRoomButton?.addEventListener("click", () => {
-  const code = createOnlineRoomCode();
-
-  onlineRoomCode.value = code;
-  onlineStatus.textContent = `Комната ${code} подготовлена в интерфейсе. Для общего поля нужно подключить серверные комнаты и синхронизацию ходов.`;
-  saveState("online");
-});
-
-joinOnlineRoomButton?.addEventListener("click", () => {
-  const code = onlineRoomCode.value.trim().toUpperCase();
-
-  onlineRoomCode.value = code;
-
-  if (!code) {
-    onlineStatus.textContent = "Введите код комнаты, чтобы подключиться к сетевому матчу.";
-    onlineRoomCode.focus();
-    saveState("online");
-    return;
-  }
-
-  onlineStatus.textContent = `Код ${code} принят. Подключение станет активным после добавления серверной синхронизации.`;
-  saveState("online");
-});
+backToModeFromSetupButton?.addEventListener("click", showOnlineScreen);
 
 backToProfileButton?.addEventListener("click", () => {
   showAccountScreen();
@@ -701,8 +659,6 @@ backToSetupFromAccountButton.addEventListener("click", () => {
   renderProfile(profileElements, loadProfile());
   normalizeProfileCountryField(profileElements);
   updateCurrentPlayerLabel();
-  populateMatchPlayerControls(getMatchPlayerSelection());
-  updateMatchPlayersPanel();
   showScreen(playModeScreen);
   saveState("mode");
 });
@@ -712,48 +668,23 @@ logoutProfileButton.addEventListener("click", logoutProfile);
 playButton.addEventListener("click", startGamePreview);
 
 backToSetup.addEventListener("click", () => {
+  if (onlineGame.isActive()) {
+    onlineGame.stop();
+    showOnlineScreen();
+    return;
+  }
+
   stopGame();
   showScreen(setupScreen);
   saveState("setup");
 });
 
-document.querySelectorAll(".option-row, .segmented-control, .difficulty-row").forEach((group) => {
+document.querySelectorAll(".option-row, .difficulty-row").forEach((group) => {
   group.addEventListener("click", () => {
     window.setTimeout(() => {
-      updateMatchPlayersPanel();
       saveState("setup");
     }, 0);
   });
-});
-
-matchPlayer1Select.addEventListener("change", () => {
-  updateMatchPlayerNotice();
-  saveState("setup");
-});
-
-matchPlayer2Select.addEventListener("change", () => {
-  if (isGuestMatchPlayerSelected()) {
-    clearGuestMatchFields();
-  }
-
-  updateMatchPlayerNotice();
-  saveState("setup");
-});
-
-matchGuestName?.addEventListener("input", () => {
-  updateMatchPlayerNotice();
-  saveState("setup");
-});
-
-matchGuestCountry?.addEventListener("change", () => {
-  matchGuestCountry.value = normalizeCountryValue(matchGuestCountry.value);
-  updateMatchPlayerNotice();
-  saveState("setup");
-});
-
-onlineRoomCode?.addEventListener("input", () => {
-  onlineRoomCode.value = onlineRoomCode.value.toUpperCase();
-  saveState("online");
 });
 
 profileElements.name.addEventListener("input", () => {

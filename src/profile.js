@@ -157,6 +157,26 @@
     return Array.isArray(profiles) ? profiles.map(normalizeProfile) : [];
   }
 
+  function mergeServerProfiles(localProfiles, serverProfiles) {
+    const mergedProfiles = [...localProfiles];
+
+    serverProfiles.forEach((serverProfile) => {
+      const existingIndex = mergedProfiles.findIndex((profile) => profile.id === serverProfile.id);
+
+      if (existingIndex >= 0) {
+        mergedProfiles[existingIndex] = {
+          ...mergedProfiles[existingIndex],
+          ...serverProfile,
+          serverProfile: true
+        };
+      } else {
+        mergedProfiles.push(serverProfile);
+      }
+    });
+
+    return mergedProfiles.map(normalizeProfile);
+  }
+
   function readLegacyProfile() {
     const profile = readJson(LEGACY_STORAGE_KEY, null);
 
@@ -298,6 +318,7 @@
   }
 
   async function syncProfilesFromServer() {
+    const localProfiles = readStoredProfiles();
     const data = await requestProfileApi("/api/profiles", null, {
       errorMessage: "Не удалось загрузить профили с сервера."
     });
@@ -305,14 +326,15 @@
       ? data.profiles.map((profile) => normalizeProfile({ ...profile, serverProfile: true }))
       : [];
     const activeProfileId = getActiveProfileId();
+    const mergedProfiles = mergeServerProfiles(localProfiles, serverProfiles);
 
-    writeProfiles(serverProfiles);
+    writeProfiles(mergedProfiles);
 
-    if (activeProfileId && !serverProfiles.some((profile) => profile.id === activeProfileId)) {
+    if (activeProfileId && !mergedProfiles.some((profile) => profile.id === activeProfileId)) {
       localStorage.removeItem(ACTIVE_PROFILE_ID_KEY);
     }
 
-    return serverProfiles;
+    return mergedProfiles;
   }
 
   async function registerProfileWithPassword(profileData, password) {
@@ -412,26 +434,6 @@
     };
   }
 
-  function calculateMatchRatingDelta(result) {
-    const difficultyBonus = {
-      "Начинающий": 8,
-      "КМС": 14,
-      "Мастер": 20,
-      "Гроссмейстер": 28
-    };
-    const baseDelta = (difficultyBonus[result.settings.difficulty] || 8) + 6;
-
-    if (result.winner === 0) {
-      return baseDelta;
-    }
-
-    if (result.winner === 1) {
-      return -Math.ceil(baseDelta * 0.7);
-    }
-
-    return 1;
-  }
-
   function applyResultToProfile(profile, result) {
     const difficulty = result.settings.difficulty;
     const difficultyRecord = {
@@ -453,28 +455,6 @@
       gamesPlayed: profile.gamesPlayed + 1,
       recordsByDifficulty: { ...profile.recordsByDifficulty }
     };
-
-    if (result.settings.mode === "Два игрока") {
-      updatedProfile.matchGamesPlayed = (updatedProfile.matchGamesPlayed || 0) + 1;
-      updatedProfile.matchRating = Math.max(
-        100,
-        (updatedProfile.matchRating || defaultProfile.matchRating) + calculateMatchRatingDelta(result)
-      );
-
-      if (result.winner === 0) {
-        updatedProfile.twoPlayerWins += 1;
-        difficultyRecord.matchWins += 1;
-      } else if (result.winner === 1) {
-        updatedProfile.twoPlayerLosses = (updatedProfile.twoPlayerLosses || 0) + 1;
-        difficultyRecord.matchLosses += 1;
-      } else {
-        updatedProfile.twoPlayerDraws = (updatedProfile.twoPlayerDraws || 0) + 1;
-        difficultyRecord.matchDraws += 1;
-      }
-
-      updatedProfile.recordsByDifficulty[difficulty] = difficultyRecord;
-      return { profile: updatedProfile, messages: [] };
-    }
 
     const messages = [];
 
@@ -508,79 +488,12 @@
     return { profile: updatedProfile, messages };
   }
 
-  function recordSingleResult(profileId, result) {
-    const profile = getProfile(profileId);
-
-    if (!profile || result.settings.mode === "Два игрока") {
-      return { profile, messages: [] };
-    }
-
-    const profileResult = applyResultToProfile(profile, result);
+  function updateProfileWithResult(result) {
+    const activeProfile = loadProfile();
+    const profileResult = applyResultToProfile(activeProfile, result);
 
     saveProfile(profileResult.profile);
     return profileResult;
-  }
-
-  function recordProfileResult(profileId, result, options = {}) {
-    const profile = getProfile(profileId);
-
-    if (!profile) {
-      return { profile: null, messages: [] };
-    }
-
-    const profileResult = applyResultToProfile(profile, result);
-
-    saveProfile(profileResult.profile, options);
-    return profileResult;
-  }
-
-  function getMirroredMatchResult(result) {
-    const mirroredWinner = result.winner === null ? null : result.winner === 0 ? 1 : 0;
-
-    return {
-      ...result,
-      scores: [...(result.scores || [])].reverse(),
-      winner: mirroredWinner
-    };
-  }
-
-  function recordMatchResult(player1Id, player2Id, result) {
-    const player1 = getProfile(player1Id);
-    const player2 = getProfile(player2Id);
-
-    if (!player1 || !player2 || player1Id === player2Id || result.settings.mode !== "Два игрока") {
-      return { player1: null, player2: null, messages: [] };
-    }
-
-    const activeProfileId = getActiveProfileId();
-    const player1Result = applyResultToProfile(player1, result);
-    const player2Result = applyResultToProfile(player2, getMirroredMatchResult(result));
-
-    saveProfile(player1Result.profile, { activate: false });
-    saveProfile(player2Result.profile, { activate: false });
-
-    if (activeProfileId) {
-      setActiveProfile(activeProfileId);
-    }
-
-    return {
-      player1: player1Result.profile,
-      player2: player2Result.profile,
-      messages: []
-    };
-  }
-
-  function updateProfileWithResult(result) {
-    const activeProfile = loadProfile();
-
-    if (!activeProfile.id) {
-      const profileResult = applyResultToProfile(activeProfile, result);
-
-      saveProfile(profileResult.profile);
-      return profileResult;
-    }
-
-    return recordProfileResult(activeProfile.id, result);
   }
 
   function renderDifficultyRecords(profile) {
@@ -668,9 +581,6 @@
     loadProfile,
     initProfile,
     loginProfileWithPassword,
-    recordMatchResult,
-    recordProfileResult,
-    recordSingleResult,
     registerProfileWithPassword,
     removeProfiles,
     renderProfile,

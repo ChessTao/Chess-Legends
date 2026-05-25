@@ -21,28 +21,34 @@ function assertIncludes(file, needle, message) {
 const indexHtml = read("index.html");
 const dataJs = read("data/data.js");
 const scriptJs = read("src/script.js");
+const onlineLobbyJs = read("src/online-lobby.js");
+const onlineGameJs = read("src/online-game.js");
 const screensJs = read("src/screens.js");
-const matchPlayersJs = read("src/match-players.js");
 const profileJs = read("src/profile.js");
+const serverJs = read("server.js");
 const packageJson = read("package.json");
 
 const appStateIndex = indexHtml.indexOf('src="src/app-state.js"');
 const screensIndex = indexHtml.indexOf('src="src/screens.js"');
 const profileFormIndex = indexHtml.indexOf('src="src/profile-form.js"');
-const matchPlayersIndex = indexHtml.indexOf('src="src/match-players.js"');
 const gameIndex = indexHtml.indexOf('src="src/game-preview.js"');
 const infoPagesIndex = indexHtml.indexOf('src="src/info-pages.js"');
+const onlineLobbyIndex = indexHtml.indexOf('src="src/online-lobby.js"');
+const onlineGameIndex = indexHtml.indexOf('src="src/online-game.js"');
 const scriptIndex = indexHtml.indexOf('src="src/script.js"');
 
 assert(appStateIndex > -1, "index.html must load src/app-state.js");
 assert(profileFormIndex > -1, "index.html must load src/profile-form.js");
-assert(matchPlayersIndex > -1, "index.html must load src/match-players.js");
 assert(infoPagesIndex > -1, "index.html must load src/info-pages.js");
 assert(!indexHtml.includes("content/biographies/index.js"), "Biographies should come from data/data.js");
 assert(appStateIndex < screensIndex, "app-state.js must load before screens.js");
-assert(profileFormIndex < matchPlayersIndex, "profile-form.js must load before match-players.js");
-assert(matchPlayersIndex < gameIndex, "match-players.js must load before game-preview.js");
+assert(profileFormIndex < gameIndex, "profile-form.js must load before game-preview.js");
 assert(gameIndex < infoPagesIndex, "game-preview.js must load before info-pages.js");
+assert(onlineLobbyIndex > -1, "index.html must load src/online-lobby.js");
+assert(onlineGameIndex > -1, "index.html must load src/online-game.js");
+assert(infoPagesIndex < onlineLobbyIndex, "info-pages.js must load before online-lobby.js");
+assert(onlineLobbyIndex < onlineGameIndex, "online-lobby.js must load before online-game.js");
+assert(onlineGameIndex < scriptIndex, "online-game.js must load before script.js");
 assert(infoPagesIndex < scriptIndex, "info-pages.js must load before script.js");
 assert(gameIndex < scriptIndex, "game-preview.js must load before script.js");
 
@@ -54,16 +60,26 @@ assertIncludes(indexHtml, 'id="playModeScreen"', "App should expose a post-login
 assertIncludes(indexHtml, 'id="soloModeButton"', "Play mode screen should expose solo play");
 assertIncludes(indexHtml, 'id="onlineModeButton"', "Play mode screen should expose online play");
 assertIncludes(indexHtml, 'id="onlineScreen"', "App should expose a separate online play screen");
+assertIncludes(indexHtml, 'id="onlineRoomList"', "Online screen should expose public room list");
+assertIncludes(indexHtml, 'id="onlineBeginnerRooms"', "Online screen should group beginner rooms");
+assertIncludes(indexHtml, 'id="onlineCandidateRooms"', "Online screen should group candidate master rooms");
+assertIncludes(indexHtml, 'id="onlineMasterRooms"', "Online screen should group master rooms");
+assertIncludes(indexHtml, 'id="onlineGrandmasterRooms"', "Online screen should group grandmaster rooms");
+assertIncludes(indexHtml, 'id="createPrivateRoomButton"', "Online screen should expose private room creation");
+assertIncludes(indexHtml, 'id="joinPrivateRoomButton"', "Online screen should expose private room join");
+assertIncludes(indexHtml, 'id="onlineRoomCode"', "Online screen should expose private room code");
+assertIncludes(indexHtml, 'id="onlineRoomLevel"', "Private rooms should expose difficulty selection");
+assert(!indexHtml.includes('id="backToModeFromOnlineButton"'), "Online screen should not show the old back button");
+assert(!indexHtml.includes('src="src/match-players.js"'), "Local two-player module should not load");
+assert(!indexHtml.includes('id="matchPlayersPanel"'), "Local two-player setup should be removed");
 assertIncludes(indexHtml, 'data-info-page="leaderboards"', "Side panel should expose leaderboards");
 assertIncludes(indexHtml, 'id="leaderboardsList"', "Leaderboards page needs a render target");
-assertIncludes(indexHtml, 'id="matchPlayer1Select" hidden', "Player 1 select should stay hidden in two-player setup");
-assertIncludes(indexHtml, '<span>Соперник</span>', "Two-player setup should expose one opponent field");
 
 assertIncludes(screensJs, "getScreenByName", "screens.js should own screen name lookup");
 assertIncludes(screensJs, "getScreenName", "screens.js should own screen reverse lookup");
 assertIncludes(scriptJs, "loadAppState", "script.js should use app-state.js");
 assertIncludes(scriptJs, "createProfileFormController", "script.js should use profile-form.js");
-assertIncludes(scriptJs, "createMatchPlayersController", "script.js should use match-players.js");
+assert(!scriptJs.includes("createMatchPlayersController"), "script.js should not initialize local match players");
 assertIncludes(scriptJs, "createInfoPagesController", "script.js should use info-pages.js");
 assertIncludes(scriptJs, "ChessLegendsData.biographies", "script.js should read biographies from unified data");
 assertIncludes(scriptJs, "ChessLegendsData.photoCredits", "script.js should read photo credits from unified data");
@@ -75,8 +91,27 @@ assertIncludes(scriptJs, "hasConfirmedProfile", "Play from info should respect c
 assertIncludes(scriptJs, "showPlayModeScreen();", "Play from info should open play mode choice for a confirmed profile");
 assertIncludes(scriptJs, "showProfileScreen();", "Play from info should open profile before confirmation");
 assertIncludes(scriptJs, "showOnlineScreen", "script.js should route online mode separately");
-assertIncludes(scriptJs, "createOnlineRoomCode", "Online mode should prepare room-code flow");
-assert(!scriptJs.includes('const GUEST_MATCH_PLAYER_ID = "__guest__"'), "Guest id should live in match-players.js");
+assertIncludes(scriptJs, "createOnlineLobbyController", "script.js should initialize online lobby module");
+assertIncludes(scriptJs, "createOnlineGameController", "script.js should initialize online game module");
+assertIncludes(scriptJs, "onlineLobby.getSnapshot", "script.js should persist online lobby snapshot");
+assertIncludes(scriptJs, "onlineLobby.restore", "script.js should restore online lobby state");
+assertIncludes(scriptJs, "startOnlineGame", "script.js should route joined rooms into online game");
+assertIncludes(onlineLobbyJs, "/api/online/rooms/join", "Online lobby should join public rooms through the server");
+assertIncludes(onlineLobbyJs, "/api/online/rooms/private", "Online lobby should create private rooms through the server");
+assertIncludes(onlineGameJs, "/api/online/rooms/", "Online game should poll and play through server rooms");
+assertIncludes(onlineGameJs, "playerToken", "Online game should keep player token separate from room state");
+assertIncludes(serverJs, "onlineRooms", "Server should own online room state");
+assertIncludes(serverJs, "/api/online/rooms", "Server should expose online room API");
+assertIncludes(serverJs, "revealOnlineCard", "Server should validate online card reveals");
+assertIncludes(serverJs, "saveOnlineResult", "Server should save completed online match results");
+assertIncludes(onlineLobbyJs, "roomList", "Online lobby should wire public room selection");
+assertIncludes(onlineLobbyJs, "selectedPublicRoomName", "Online lobby should store public room separately");
+assertIncludes(onlineLobbyJs, "privateRoomName", "Online lobby should store private room draft separately");
+assertIncludes(profileJs, "mergeServerProfiles", "Profile sync should merge server profiles into local profiles");
+assert(!profileJs.includes("writeProfiles(serverProfiles);"), "Profile sync must not overwrite local profiles with server-only list");
+assert(!profileJs.includes("recordMatchResult"), "Profile API should not expose local match recording");
+assert(!profileJs.includes("recordProfileResult"), "Profile API should not expose profile-to-profile local match recording");
+assertIncludes(profileJs, "matchRating", "Profile should keep future online match rating fields");
 assert(!scriptJs.includes("function renderMarkdown"), "Markdown rendering should live in info-pages.js");
 assert(!scriptJs.includes("function confirmProfileEntry"), "Profile entry flow should live in profile-form.js");
 
@@ -129,44 +164,21 @@ vm.runInNewContext(profileJs, profileContext);
 
 const profileApi = profileContext.window.ChessLegendsProfile;
 const playerA = profileApi.createProfile({ name: "A", country: "" });
-const playerB = profileApi.createProfile({ name: "B", country: "" });
-const matchResult = {
-  settings: { mode: "Два игрока", difficulty: "КМС" },
-  scores: [5, 3],
-  winner: 0,
-  moves: 20,
-  seconds: 0
-};
-
-profileApi.recordMatchResult(playerA.id, playerB.id, matchResult);
-
-const playerAAfterMatch = profileApi.getProfile(playerA.id);
-const playerBAfterMatch = profileApi.getProfile(playerB.id);
-
-assert(playerAAfterMatch.matchRating > 1000, "Match winner rating should increase");
-assert(playerBAfterMatch.matchRating < 1000, "Match loser rating should decrease");
-assert(playerAAfterMatch.twoPlayerWins === 1, "Winner profile should record one match win");
-assert(playerBAfterMatch.twoPlayerLosses === 1, "Loser profile should record one match loss");
-
-profileApi.recordProfileResult(playerA.id, {
-  settings: { mode: "Два игрока", difficulty: "Начинающий" },
-  scores: [2, 4],
-  winner: 1,
+profileApi.saveProfile(playerA);
+profileApi.updateProfileWithResult({
+  settings: { mode: "Один игрок", difficulty: "Начинающий" },
   moves: 12,
-  seconds: 0
+  seconds: 30
 });
 
-const playerAAfterGuestMatch = profileApi.getProfile(playerA.id);
-assert(playerAAfterGuestMatch.matchGamesPlayed === 2, "Guest match should be recorded for local profile");
-assert(playerAAfterGuestMatch.twoPlayerLosses === 1, "Guest match loss should be recorded for local profile");
-
-assertIncludes(matchPlayersJs, 'new Option("Новый игрок"', "Opponent select must include New player");
-assertIncludes(matchPlayersJs, "GUEST_MATCH_PLAYER_ID", "match-players.js should own guest selection semantics");
-assertIncludes(matchPlayersJs, "Выберите соперника", "Opponent select must start with an explicit placeholder");
+const playerAAfterSingleGame = profileApi.getProfile(playerA.id);
+assert(playerAAfterSingleGame.singleGamesPlayed === 1, "Single-player result should update active profile");
+assert(playerAAfterSingleGame.matchGamesPlayed === 0, "Single-player result should not touch match stats");
 
 assertIncludes(packageJson, "src/app-state.js", "npm run check must include app-state.js");
 assertIncludes(packageJson, "src/profile-form.js", "npm run check must include profile-form.js");
-assertIncludes(packageJson, "src/match-players.js", "npm run check must include match-players.js");
+assert(!packageJson.includes("src/match-players.js"), "npm run check should not include removed local match module");
 assertIncludes(packageJson, "src/info-pages.js", "npm run check must include info-pages.js");
+assertIncludes(packageJson, "src/online-game.js", "npm run check must include online-game.js");
 
 console.log("Smoke checks passed.");

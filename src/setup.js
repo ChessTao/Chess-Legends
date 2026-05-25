@@ -6,7 +6,7 @@
   function getGameSettings() {
     return {
       cardType: getSelectedValue(".option-row"),
-      mode: getSelectedValue(".segmented-control"),
+      mode: "Один игрок",
       difficulty: getSelectedValue(".difficulty-row")
     };
   }
@@ -33,12 +33,11 @@
     }
 
     setSelectedValue(".option-row", settings.cardType);
-    setSelectedValue(".segmented-control", settings.mode);
     setSelectedValue(".difficulty-row", settings.difficulty);
   }
 
   function initSetupControls() {
-    document.querySelectorAll(".option-row, .segmented-control, .difficulty-row").forEach((group) => {
+    document.querySelectorAll(".option-row, .difficulty-row").forEach((group) => {
       group.addEventListener("click", (event) => {
         const button = event.target.closest("button");
 

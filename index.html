@@ -139,31 +139,109 @@
             <p class="setup-subtitle">Сетевая игра</p>
             <div class="setup-player">
               <span id="onlineCurrentPlayerLabel">Игрок: Игрок</span>
-              <button class="profile-link" id="backToModeFromOnlineButton" type="button">Назад</button>
             </div>
           </header>
 
           <section class="online-room-panel" aria-labelledby="onlineRoomTitle">
             <div class="profile-head">
               <div>
-                <h3 id="onlineRoomTitle">Комната матча</h3>
-                <p class="profile-subtitle">Сетевой матч выделен в отдельную ветку, чтобы не смешивать его с локальной игрой.</p>
+                <h3 id="onlineRoomTitle">Открытые комнаты</h3>
+                <p class="profile-subtitle">Выберите город и подключайтесь к свободному столу.</p>
               </div>
             </div>
 
-            <div class="online-room-grid">
-              <button class="online-room-action" id="createOnlineRoomButton" type="button">Создать комнату</button>
-              <label class="profile-field">
-                <span>Код комнаты</span>
-                <input id="onlineRoomCode" type="text" maxlength="12" autocomplete="off" placeholder="Например: A1B2C3">
-              </label>
-              <button class="online-room-action" id="joinOnlineRoomButton" type="button">Подключиться</button>
+            <div class="online-room-list" id="onlineRoomList" aria-label="Список открытых комнат">
+              <section class="online-room-group" aria-labelledby="onlineBeginnerRooms">
+                <h4 id="onlineBeginnerRooms">Начинающий</h4>
+                <button class="online-room-card" type="button" data-room-name="Прага" data-room-level="Начинающий">
+                  <span>Прага</span>
+                </button>
+                <button class="online-room-card" type="button" data-room-name="Рига" data-room-level="Начинающий">
+                  <span>Рига</span>
+                </button>
+                <button class="online-room-card" type="button" data-room-name="София" data-room-level="Начинающий">
+                  <span>София</span>
+                </button>
+              </section>
+              <section class="online-room-group" aria-labelledby="onlineCandidateRooms">
+                <h4 id="onlineCandidateRooms">КМС</h4>
+                <button class="online-room-card" type="button" data-room-name="Будапешт" data-room-level="КМС">
+                  <span>Будапешт</span>
+                </button>
+                <button class="online-room-card" type="button" data-room-name="Вильнюс" data-room-level="КМС">
+                  <span>Вильнюс</span>
+                </button>
+                <button class="online-room-card" type="button" data-room-name="Краков" data-room-level="КМС">
+                  <span>Краков</span>
+                </button>
+              </section>
+              <section class="online-room-group" aria-labelledby="onlineMasterRooms">
+                <h4 id="onlineMasterRooms">Мастер</h4>
+                <button class="online-room-card" type="button" data-room-name="Рейкьявик" data-room-level="Мастер">
+                  <span>Рейкьявик</span>
+                </button>
+                <button class="online-room-card" type="button" data-room-name="Амстердам" data-room-level="Мастер">
+                  <span>Амстердам</span>
+                </button>
+                <button class="online-room-card" type="button" data-room-name="Лозанна" data-room-level="Мастер">
+                  <span>Лозанна</span>
+                </button>
+              </section>
+              <section class="online-room-group" aria-labelledby="onlineGrandmasterRooms">
+                <h4 id="onlineGrandmasterRooms">Гроссмейстер</h4>
+                <button class="online-room-card" type="button" data-room-name="Касабланка" data-room-level="Гроссмейстер">
+                  <span>Касабланка</span>
+                </button>
+                <button class="online-room-card" type="button" data-room-name="Цюрих" data-room-level="Гроссмейстер">
+                  <span>Цюрих</span>
+                </button>
+                <button class="online-room-card" type="button" data-room-name="Мерано" data-room-level="Гроссмейстер">
+                  <span>Мерано</span>
+                </button>
+              </section>
             </div>
 
+            <section class="online-private-panel" aria-labelledby="onlinePrivateRoomTitle">
+              <div>
+                <h3 id="onlinePrivateRoomTitle">Приватная комната</h3>
+              </div>
+
+              <div class="online-private-room">
+                <label class="profile-field">
+                  <span>Название</span>
+                  <input id="onlineRoomName" type="text" maxlength="24" autocomplete="off">
+                </label>
+                <label class="profile-field">
+                  <span>Уровень</span>
+                  <select id="onlineRoomLevel">
+                    <option>Начинающий</option>
+                    <option>КМС</option>
+                    <option>Мастер</option>
+                    <option>Гроссмейстер</option>
+                  </select>
+                </label>
+                <label class="profile-field">
+                  <span>Пароль</span>
+                  <input id="onlineRoomPassword" type="password" maxlength="32" autocomplete="new-password" placeholder="Для приглашения">
+                </label>
+                <button class="online-room-action" id="createPrivateRoomButton" type="button">Создать приватную</button>
+                <label class="profile-field">
+                  <span>Код входа</span>
+                  <input id="onlineRoomCode" type="text" maxlength="12" autocomplete="off" placeholder="Например A1B2C3">
+                </label>
+                <button class="online-room-action" id="joinPrivateRoomButton" type="button">Войти в приватную</button>
+              </div>
+            </section>
+
             <p class="online-status" id="onlineStatus" aria-live="polite">
-              Сейчас это точка входа для сетевого режима. Следующий шаг - подключить серверные комнаты и синхронизацию ходов.
+              Открытые комнаты подходят для быстрой партии.
             </p>
           </section>
+
+          <div class="setup-corner-actions" aria-label="Действия сетевой игры">
+            <button class="profile-link" id="onlineSoloModeButton" type="button">Играть одному</button>
+            <button class="profile-link" id="onlineLogoutProfileButton" type="button">Выйти</button>
+          </div>
         </div>
       </section>
 
@@ -187,36 +265,6 @@
                   <span class="option-text">Сопоставьте портрет и фамилию.</span>
                 </button>
               </div>
-            </section>
-
-            <section class="option-group" id="localModeGroup" aria-labelledby="modeTitle" hidden>
-              <h3 id="modeTitle">Режим</h3>
-              <div class="segmented-control" aria-label="Режим игры">
-                <button class="segment is-selected" type="button" data-value="Один игрок" aria-pressed="true">Один игрок</button>
-                <button class="segment" type="button" data-value="Два игрока" aria-pressed="false">Два игрока</button>
-              </div>
-            </section>
-
-            <section class="option-group match-players" id="matchPlayersPanel" aria-labelledby="matchPlayersTitle" hidden>
-              <h3 id="matchPlayersTitle">Участники матча</h3>
-              <div class="match-player-grid">
-                <select id="matchPlayer1Select" hidden disabled aria-hidden="true"></select>
-                <label class="profile-field">
-                  <span>Соперник</span>
-                  <select id="matchPlayer2Select"></select>
-                </label>
-              </div>
-              <div class="match-guest-grid" id="matchGuestFields" hidden>
-                <label class="profile-field">
-                  <span>Имя нового игрока</span>
-                  <input id="matchGuestName" type="text" maxlength="24" autocomplete="off" placeholder="Игрок 2">
-                </label>
-                <label class="profile-field">
-                  <span>Страна</span>
-                  <input id="matchGuestCountry" type="text" list="countryList" maxlength="64" autocomplete="new-password" placeholder="Выберите страну">
-                </label>
-              </div>
-              <p class="match-player-note" id="matchPlayersNotice" aria-live="polite"></p>
             </section>
 
             <section class="option-group" aria-labelledby="difficultyTitle">
@@ -355,10 +403,11 @@
     <script src="src/setup.js"></script>
     <script src="src/profile.js"></script>
     <script src="src/profile-form.js"></script>
-    <script src="src/match-players.js"></script>
     <script src="src/game-preview.js"></script>
     <script src="src/intro.js"></script>
     <script src="src/info-pages.js"></script>
+    <script src="src/online-lobby.js"></script>
+    <script src="src/online-game.js"></script>
     <script src="src/script.js"></script>
   </body>
 </html>
