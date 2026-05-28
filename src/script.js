@@ -455,9 +455,18 @@ function showOnlineScreen() {
   saveState("online");
 }
 
+function logoutServerSession() {
+  if (typeof fetch !== "function") {
+    return;
+  }
+
+  fetch("/api/logout", { method: "POST" }).catch(() => {});
+}
+
 function logoutProfile() {
   stopGame();
   onlineGame.stop();
+  logoutServerSession();
   hasConfirmedProfile = false;
   updateSideProfileButton();
   profileElements.remember.checked = false;
@@ -570,7 +579,31 @@ function restoreState() {
     return;
   }
 
-  if (savedScreenName === "game" || savedScreenName === "onlineGame") {
+  if (savedScreenName === "onlineGame") {
+    showScreen(hasConfirmedProfile ? playModeScreen : profileScreen);
+
+    if (hasConfirmedProfile) {
+      onlineGame.resumeActive()
+        .then((resumed) => {
+          if (resumed) {
+            hasConfirmedProfile = true;
+            updateSideProfileButton();
+            showScreen(gameScreen);
+            saveState("onlineGame");
+            return;
+          }
+          saveState("mode");
+        })
+        .catch(() => {
+          saveState("onlineGame", { pendingOnlineResume: true });
+        });
+    } else {
+      saveState("profile");
+    }
+    return;
+  }
+
+  if (savedScreenName === "game") {
     showScreen(hasConfirmedProfile ? playModeScreen : profileScreen);
     saveState(hasConfirmedProfile ? "mode" : "profile");
     return;

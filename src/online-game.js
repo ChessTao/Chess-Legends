@@ -232,6 +232,17 @@
       onStateChange?.("onlineGame", getSnapshot());
     }
 
+    async function resumeActive() {
+      const data = await requestJson("/api/online/active");
+
+      if (!data.room || !data.playerToken) {
+        return false;
+      }
+
+      start(data.room, data.playerToken);
+      return true;
+    }
+
     function stop(options = {}) {
       const previousState = state;
 
@@ -274,6 +285,7 @@
       getSnapshot,
       init,
       isActive,
+      resumeActive,
       start,
       stop
     };

@@ -9,8 +9,18 @@ const port = Number(process.env.PORT) || 4173;
 const host = process.env.HOST || (process.env.NODE_ENV === "production" ? "0.0.0.0" : "127.0.0.1");
 const runtimeDir = path.join(root, ".runtime");
 const profilesFile = path.join(runtimeDir, "profiles.json");
+const sessionsFile = path.join(runtimeDir, "sessions.json");
+const roomsFile = path.join(runtimeDir, "online-rooms.json");
 const sessions = new Map();
 const onlineRooms = new Map();
+const privateRoomCreateTimes = new Map();
+const MAX_PRIVATE_ROOMS_PER_PLAYER = 3;
+const PRIVATE_ROOM_CREATE_COOLDOWN_MS = 5000;
+const PLAYER_DISCONNECT_AFTER_MS = 12000;
+const EMPTY_PRIVATE_ROOM_TTL_MS = 10 * 60 * 1000;
+const FINISHED_ROOM_TTL_MS = 30 * 60 * 1000;
+const PUBLIC_FINISHED_RESET_MS = 60 * 1000;
+const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 const publicRoomGroups = [
   { level: "Начинающий", names: ["Прага", "Рига", "София"] },
@@ -84,6 +94,22 @@ function ensureRuntimeDir() {
   fs.mkdirSync(runtimeDir, { recursive: true });
 }
 
+function readJsonFile(filePath, fallback) {
+  try {
+    return JSON.parse(fs.readFileSync(filePath, "utf8"));
+  } catch {
+    return fallback;
+  }
+}
+
+function writeJsonFileAtomic(filePath, payload) {
+  ensureRuntimeDir();
+  const temporaryFile = `${filePath}.${process.pid}.tmp`;
+
+  fs.writeFileSync(temporaryFile, `${JSON.stringify(payload, null, 2)}\n`);
+  fs.renameSync(temporaryFile, filePath);
+}
+
 function readProfiles() {
   try {
     const content = fs.readFileSync(profilesFile, "utf8");
@@ -96,11 +122,50 @@ function readProfiles() {
 }
 
 function writeProfiles(profiles) {
-  ensureRuntimeDir();
-  const temporaryFile = `${profilesFile}.${process.pid}.tmp`;
+  writeJsonFileAtomic(profilesFile, { profiles });
+}
 
-  fs.writeFileSync(temporaryFile, `${JSON.stringify({ profiles }, null, 2)}\n`);
-  fs.renameSync(temporaryFile, profilesFile);
+function loadSessions() {
+  const parsed = readJsonFile(sessionsFile, { sessions: [] });
+  const now = Date.now();
+  let changed = false;
+
+  sessions.clear();
+  if (!Array.isArray(parsed.sessions)) {
+    return;
+  }
+
+  parsed.sessions.forEach((session) => {
+    if (session?.token && session?.profileId) {
+      const createdAt = Number(session.createdAt) || now;
+      const expiresAt = Number(session.expiresAt) || createdAt + SESSION_TTL_MS;
+
+      if (expiresAt > now) {
+        sessions.set(String(session.token), {
+          profileId: String(session.profileId),
+          createdAt,
+          expiresAt
+        });
+      } else {
+        changed = true;
+      }
+    }
+  });
+
+  if (changed) {
+    saveSessions();
+  }
+}
+
+function saveSessions() {
+  writeJsonFileAtomic(sessionsFile, {
+    sessions: [...sessions.entries()].map(([token, session]) => ({
+      token,
+      profileId: session.profileId,
+      createdAt: session.createdAt,
+      expiresAt: session.expiresAt
+    }))
+  });
 }
 
 function normalizeProfileName(name = "") {
@@ -135,22 +200,87 @@ function toPublicProfile(profile) {
   return publicProfile;
 }
 
-function getSessionProfileId(request) {
+function getSessionToken(request) {
   const cookie = request.headers.cookie || "";
-  const token = cookie
+
+  return cookie
     .split(";")
     .map((part) => part.trim())
     .find((part) => part.startsWith("chess_legends_session="))
     ?.split("=")[1];
+}
 
-  return token ? sessions.get(token) || null : null;
+function cleanupSessions() {
+  const now = Date.now();
+  let changed = false;
+
+  for (const [token, session] of sessions.entries()) {
+    if (!session?.profileId || Number(session.expiresAt) <= now) {
+      sessions.delete(token);
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    saveSessions();
+  }
+}
+
+function getSessionProfileId(request) {
+  const token = getSessionToken(request);
+  const session = token ? sessions.get(token) : null;
+
+  if (!session || Number(session.expiresAt) <= Date.now()) {
+    if (token && session) {
+      sessions.delete(token);
+      saveSessions();
+    }
+    return null;
+  }
+
+  return session.profileId;
+}
+
+function getSessionProfile(request) {
+  const profileId = getSessionProfileId(request);
+
+  if (!profileId) {
+    return null;
+  }
+
+  return readProfiles().find((profile) => profile.id === profileId) || null;
+}
+
+function requireSessionProfile(request) {
+  const profile = getSessionProfile(request);
+
+  if (!profile) {
+    const error = new Error("Нужно войти в профиль.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  return profile;
 }
 
 function createSessionCookie(profileId) {
   const token = crypto.randomBytes(24).toString("hex");
+  const createdAt = Date.now();
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
 
-  sessions.set(token, profileId);
-  return `chess_legends_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=2592000`;
+  sessions.set(token, {
+    profileId,
+    createdAt,
+    expiresAt: createdAt + SESSION_TTL_MS
+  });
+  saveSessions();
+  return `chess_legends_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=2592000${secure}`;
+}
+
+function createExpiredSessionCookie() {
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+
+  return `chess_legends_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0${secure}`;
 }
 
 function mergePublicProfile(storedProfile, incomingProfile) {
@@ -173,6 +303,7 @@ function loadGameData() {
 }
 
 const gameData = loadGameData();
+const allowedLevels = new Set(Object.keys(gameData.difficultySettings));
 
 function shuffle(items) {
   const result = [...items];
@@ -208,6 +339,18 @@ function createPlayerToken() {
   return crypto.randomBytes(18).toString("hex");
 }
 
+function normalizeOnlineLevel(level) {
+  const normalizedLevel = String(level || "Начинающий").trim();
+
+  if (!allowedLevels.has(normalizedLevel)) {
+    const error = new Error("Некорректный уровень комнаты.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return normalizedLevel;
+}
+
 function sanitizePlayer(profile = {}) {
   return {
     id: String(profile.id || createRoomId("guest")),
@@ -220,20 +363,98 @@ function getPublicRoomId(name, level) {
   return `public:${level}:${name}`;
 }
 
-function createRoom({ id = createRoomId(), name, level, isPrivate = false, password = "" }) {
+function touchPlayer(player, status = "connected") {
+  player.connectionStatus = status;
+  player.lastSeenAt = Date.now();
+  if (status === "connected") {
+    delete player.leftAt;
+  }
+}
+
+function createRoom({ id = createRoomId(), name, level, isPrivate = false, passwordHash = "", passwordSalt = "" }) {
   return {
     id,
     code: isPrivate ? crypto.randomBytes(3).toString("hex").toUpperCase() : "",
     name,
     level,
     isPrivate,
-    password,
+    passwordHash,
+    passwordSalt,
     status: "waiting",
     players: [],
     game: null,
     resultSaved: false,
     updatedAt: Date.now()
   };
+}
+
+function shouldPersistRoom(room) {
+  return room.isPrivate
+    || room.status !== "waiting"
+    || room.players.some((player) => player.connectionStatus !== "left");
+}
+
+function normalizeLoadedRoom(room) {
+  if (!room || typeof room !== "object" || !room.id) {
+    return null;
+  }
+
+  const legacyPassword = String(room.password || "");
+  const legacyPasswordHash = legacyPassword ? hashPassword(legacyPassword) : null;
+  const loadedRoom = {
+    id: String(room.id),
+    code: String(room.code || ""),
+    name: String(room.name || "Комната").slice(0, 24),
+    level: normalizeOnlineLevel(room.level),
+    isPrivate: Boolean(room.isPrivate),
+    passwordHash: String(room.passwordHash || legacyPasswordHash?.passwordHash || ""),
+    passwordSalt: String(room.passwordSalt || legacyPasswordHash?.passwordSalt || ""),
+    status: ["waiting", "playing", "finished"].includes(room.status) ? room.status : "waiting",
+    players: Array.isArray(room.players) ? room.players : [],
+    game: room.game && typeof room.game === "object" ? room.game : null,
+    resultSaved: Boolean(room.resultSaved),
+    updatedAt: Number(room.updatedAt) || Date.now()
+  };
+
+  loadedRoom.players = loadedRoom.players.map((player) => ({
+    id: String(player.id || createRoomId("guest")),
+    name: String(player.name || "Игрок").trim().slice(0, 24) || "Игрок",
+    country: String(player.country || "").trim().slice(0, 64),
+    token: String(player.token || createPlayerToken()),
+    connectionStatus: player.connectionStatus === "left" ? "left" : "disconnected",
+    joinedAt: Number(player.joinedAt) || loadedRoom.updatedAt,
+    lastSeenAt: Number(player.lastSeenAt) || loadedRoom.updatedAt,
+    leftAt: player.leftAt ? Number(player.leftAt) : undefined
+  }));
+
+  return loadedRoom;
+}
+
+function loadOnlineRooms() {
+  const parsed = readJsonFile(roomsFile, { rooms: [] });
+
+  onlineRooms.clear();
+  if (!Array.isArray(parsed.rooms)) {
+    return;
+  }
+
+  parsed.rooms.forEach((room) => {
+    try {
+      const loadedRoom = normalizeLoadedRoom(room);
+
+      if (loadedRoom && shouldPersistRoom(loadedRoom)) {
+        onlineRooms.set(loadedRoom.id, loadedRoom);
+      }
+    } catch {
+      // Skip malformed room records; a bad runtime file must not block startup.
+    }
+  });
+}
+
+function saveOnlineRooms() {
+  writeJsonFileAtomic(roomsFile, {
+    rooms: [...onlineRooms.values()].filter(shouldPersistRoom)
+  });
 }
 
 function ensurePublicRooms() {
@@ -252,6 +473,93 @@ function getRoomPlayer(room, token) {
   return room.players.find((player) => player.token === token) || null;
 }
 
+function isPublicRoom(room) {
+  return !room.isPrivate && String(room.id || "").startsWith("public:");
+}
+
+function resetPublicRoom(room) {
+  return createRoom({ id: room.id, name: room.name, level: room.level });
+}
+
+function getRoomPlayerByProfile(room, profileId) {
+  return room.players.find((player) => player.id === profileId && player.connectionStatus !== "left") || null;
+}
+
+function getAuthorizedRoomPlayer(request, room, token = "") {
+  const profile = requireSessionProfile(request);
+  const player = token ? getRoomPlayer(room, token) : getRoomPlayerByProfile(room, profile.id);
+
+  if (!player || player.id !== profile.id || player.connectionStatus === "left") {
+    const error = new Error("Нет доступа к этой комнате.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  touchPlayer(player);
+  room.updatedAt = Date.now();
+  return player;
+}
+
+function refreshRoomConnections(room) {
+  const now = Date.now();
+
+  room.players.forEach((player) => {
+    if (player.connectionStatus === "connected" && now - (player.lastSeenAt || room.updatedAt) > PLAYER_DISCONNECT_AFTER_MS) {
+      player.connectionStatus = "disconnected";
+    }
+  });
+}
+
+function cleanupOnlineRooms() {
+  const now = Date.now();
+  let changed = false;
+
+  for (const [id, room] of onlineRooms.entries()) {
+    const previousPlayers = JSON.stringify(room.players.map((player) => [player.id, player.connectionStatus]));
+
+    refreshRoomConnections(room);
+    changed = changed || previousPlayers !== JSON.stringify(room.players.map((player) => [player.id, player.connectionStatus]));
+
+    const isFinishedExpired = room.status === "finished" && now - (room.game?.finishedAt || room.updatedAt) > (
+      isPublicRoom(room) ? PUBLIC_FINISHED_RESET_MS : FINISHED_ROOM_TTL_MS
+    );
+
+    if (isPublicRoom(room) && isFinishedExpired) {
+      onlineRooms.set(id, resetPublicRoom(room));
+      changed = true;
+      continue;
+    }
+
+    if (!room.isPrivate) {
+      continue;
+    }
+
+    const activePlayers = room.players.filter((player) => player.connectionStatus !== "left");
+    const isEmptyExpired = activePlayers.length === 0 && now - room.updatedAt > EMPTY_PRIVATE_ROOM_TTL_MS;
+
+    if (isEmptyExpired || isFinishedExpired) {
+      onlineRooms.delete(id);
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    saveOnlineRooms();
+  }
+}
+
+function findActiveRoomForProfile(profileId) {
+  cleanupOnlineRooms();
+
+  return [...onlineRooms.values()].find((room) => {
+    if (room.status === "finished") {
+      return false;
+    }
+
+    return Boolean(getRoomPlayerByProfile(room, profileId));
+  }) || null;
+}
+
 function closeExpiredMismatch(room) {
   const pending = room.game?.pendingMismatch;
 
@@ -268,22 +576,27 @@ function closeExpiredMismatch(room) {
   room.game.pendingMismatch = null;
   room.game.turnIndex = room.game.turnIndex === 0 ? 1 : 0;
   room.updatedAt = Date.now();
+  saveOnlineRooms();
 }
 
 function serializeRoom(room, token = "") {
   closeExpiredMismatch(room);
+  refreshRoomConnections(room);
 
   const player = token ? getRoomPlayer(room, token) : null;
+  const canSeePrivateCode = !room.isPrivate || Boolean(player);
 
   return {
     id: room.id,
-    code: room.code,
+    code: canSeePrivateCode ? room.code : "",
     name: room.name,
     level: room.level,
     isPrivate: room.isPrivate,
     status: room.status,
     playerIndex: player ? room.players.indexOf(player) : null,
-    players: room.players.map(({ token: _token, ...publicPlayer }) => publicPlayer),
+    players: room.players
+      .filter((publicPlayer) => publicPlayer.connectionStatus !== "left")
+      .map(({ token: _token, joinedAt: _joinedAt, lastSeenAt: _lastSeenAt, leftAt: _leftAt, ...publicPlayer }) => publicPlayer),
     game: player && room.game ? {
       settings: room.game.settings,
       cards: room.game.cards,
@@ -325,10 +638,16 @@ function joinRoom(room, profile) {
   const existingPlayer = room.players.find((item) => item.id === player.id);
 
   if (existingPlayer) {
+    touchPlayer(existingPlayer);
+    saveOnlineRooms();
     return existingPlayer;
   }
 
-  if (room.players.length >= 2) {
+  if (room.status !== "finished") {
+    room.players = room.players.filter((item) => item.connectionStatus !== "left");
+  }
+
+  if (room.players.filter((item) => item.connectionStatus !== "left").length >= 2) {
     const error = new Error("Комната уже занята.");
     error.statusCode = 409;
     throw error;
@@ -336,15 +655,20 @@ function joinRoom(room, profile) {
 
   const joinedPlayer = {
     ...player,
-    token: createPlayerToken()
+    token: createPlayerToken(),
+    connectionStatus: "connected",
+    joinedAt: Date.now(),
+    lastSeenAt: Date.now()
   };
 
   room.players.push(joinedPlayer);
   room.updatedAt = Date.now();
 
-  if (room.players.length === 2) {
+  if (room.players.filter((item) => item.connectionStatus !== "left").length === 2) {
     startOnlineGame(room);
   }
+
+  saveOnlineRooms();
 
   return joinedPlayer;
 }
@@ -416,9 +740,10 @@ function saveOnlineResult(room) {
 
   writeProfiles(profiles);
   room.resultSaved = true;
+  saveOnlineRooms();
 }
 
-function revealOnlineCard(room, token, index) {
+function revealOnlineCard(room, player, index) {
   closeExpiredMismatch(room);
 
   if (room.status !== "playing" || !room.game) {
@@ -427,10 +752,9 @@ function revealOnlineCard(room, token, index) {
     throw error;
   }
 
-  const player = getRoomPlayer(room, token);
   const playerIndex = room.players.indexOf(player);
 
-  if (!player || playerIndex !== room.game.turnIndex) {
+  if (playerIndex < 0 || player.connectionStatus === "left" || playerIndex !== room.game.turnIndex) {
     const error = new Error("Сейчас ход соперника.");
     error.statusCode = 409;
     throw error;
@@ -484,10 +808,13 @@ function revealOnlineCard(room, token, index) {
   }
 
   room.updatedAt = Date.now();
+  saveOnlineRooms();
 }
 
 async function handleApi(request, response, url) {
+  cleanupSessions();
   ensurePublicRooms();
+  cleanupOnlineRooms();
 
   if (request.method === "GET" && url.pathname === "/api/health") {
     sendJson(response, 200, { ok: true });
@@ -496,12 +823,33 @@ async function handleApi(request, response, url) {
 
   if (request.method === "GET" && url.pathname === "/api/online/rooms") {
     sendJson(response, 200, {
-      rooms: [...onlineRooms.values()].map((room) => serializeRoom(room))
+      rooms: [...onlineRooms.values()]
+        .filter((room) => !room.isPrivate)
+        .map((room) => serializeRoom(room))
+    });
+    return true;
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/online/active") {
+    const profile = requireSessionProfile(request);
+    const room = findActiveRoomForProfile(profile.id);
+
+    if (!room) {
+      sendJson(response, 200, { room: null, playerToken: "" });
+      return true;
+    }
+
+    const player = getRoomPlayerByProfile(room, profile.id);
+    touchPlayer(player);
+    sendJson(response, 200, {
+      playerToken: player.token,
+      room: serializeRoom(room, player.token)
     });
     return true;
   }
 
   if (request.method === "POST" && url.pathname === "/api/online/rooms/join") {
+    const profile = requireSessionProfile(request);
     const body = await readRequestJson(request);
     const id = body.id || getPublicRoomId(body.name, body.level);
     const room = onlineRooms.get(id);
@@ -511,7 +859,7 @@ async function handleApi(request, response, url) {
       return true;
     }
 
-    const player = joinRoom(room, body.profile);
+    const player = joinRoom(room, profile);
 
     sendJson(response, 200, {
       playerToken: player.token,
@@ -521,23 +869,47 @@ async function handleApi(request, response, url) {
   }
 
   if (request.method === "POST" && url.pathname === "/api/online/rooms/private") {
+    const profile = requireSessionProfile(request);
     const body = await readRequestJson(request);
     const password = String(body.password || "");
+    const now = Date.now();
+    const lastCreatedAt = privateRoomCreateTimes.get(profile.id) || 0;
 
     if (password.length < 1) {
       sendJson(response, 400, { error: "Пароль приватной комнаты обязателен." });
       return true;
     }
 
+    if (password.length > 32) {
+      sendJson(response, 400, { error: "Пароль приватной комнаты слишком длинный." });
+      return true;
+    }
+
+    if (now - lastCreatedAt < PRIVATE_ROOM_CREATE_COOLDOWN_MS) {
+      sendJson(response, 429, { error: "Подождите несколько секунд перед созданием новой комнаты." });
+      return true;
+    }
+
+    const activePrivateRooms = [...onlineRooms.values()].filter((room) => {
+      return room.isPrivate && room.status !== "finished" && Boolean(getRoomPlayerByProfile(room, profile.id));
+    });
+
+    if (activePrivateRooms.length >= MAX_PRIVATE_ROOMS_PER_PLAYER) {
+      sendJson(response, 429, { error: "Слишком много активных приватных комнат." });
+      return true;
+    }
+
     const room = createRoom({
       name: String(body.name || "").trim().slice(0, 24) || "Приватная комната",
-      level: String(body.level || "Начинающий"),
+      level: normalizeOnlineLevel(body.level),
       isPrivate: true,
-      password
+      ...hashPassword(password)
     });
-    const player = joinRoom(room, body.profile);
+    const player = joinRoom(room, profile);
 
+    privateRoomCreateTimes.set(profile.id, now);
     onlineRooms.set(room.id, room);
+    saveOnlineRooms();
     sendJson(response, 201, {
       playerToken: player.token,
       room: serializeRoom(room, player.token)
@@ -546,16 +918,17 @@ async function handleApi(request, response, url) {
   }
 
   if (request.method === "POST" && url.pathname === "/api/online/rooms/private/join") {
+    const profile = requireSessionProfile(request);
     const body = await readRequestJson(request);
     const code = String(body.code || "").trim().toUpperCase();
     const room = [...onlineRooms.values()].find((item) => item.isPrivate && item.code === code);
 
-    if (!room || room.password !== String(body.password || "")) {
+    if (!room || !verifyPassword(room, String(body.password || ""))) {
       sendJson(response, 401, { error: "Неверный код или пароль комнаты." });
       return true;
     }
 
-    const player = joinRoom(room, body.profile);
+    const player = joinRoom(room, profile);
 
     sendJson(response, 200, {
       playerToken: player.token,
@@ -574,7 +947,9 @@ async function handleApi(request, response, url) {
       return true;
     }
 
-    sendJson(response, 200, { room: serializeRoom(room, url.searchParams.get("token") || "") });
+    const player = getAuthorizedRoomPlayer(request, room, url.searchParams.get("token") || "");
+
+    sendJson(response, 200, { room: serializeRoom(room, player.token) });
     return true;
   }
 
@@ -589,8 +964,10 @@ async function handleApi(request, response, url) {
       return true;
     }
 
-    revealOnlineCard(room, String(body.playerToken || ""), Number(body.index));
-    sendJson(response, 200, { room: serializeRoom(room, String(body.playerToken || "")) });
+    const player = getAuthorizedRoomPlayer(request, room, String(body.playerToken || ""));
+
+    revealOnlineCard(room, player, Number(body.index));
+    sendJson(response, 200, { room: serializeRoom(room, player.token) });
     return true;
   }
 
@@ -601,15 +978,23 @@ async function handleApi(request, response, url) {
     const body = await readRequestJson(request);
 
     if (room) {
-      room.players = room.players.filter((player) => player.token !== String(body.playerToken || ""));
-      if (!room.isPrivate && room.players.length === 0) {
+      const player = getAuthorizedRoomPlayer(request, room, String(body.playerToken || ""));
+
+      player.connectionStatus = "left";
+      player.leftAt = Date.now();
+      room.updatedAt = Date.now();
+
+      const activePlayers = room.players.filter((item) => item.connectionStatus !== "left");
+
+      if (!room.isPrivate && activePlayers.length === 0) {
         onlineRooms.set(room.id, createRoom({ id: room.id, name: room.name, level: room.level }));
-      } else if (room.isPrivate && room.players.length === 0) {
+      } else if (room.isPrivate && activePlayers.length === 0) {
         onlineRooms.delete(room.id);
       } else if (room.status !== "finished") {
         room.status = "waiting";
         room.game = null;
       }
+      saveOnlineRooms();
     }
 
     sendJson(response, 200, { ok: true });
@@ -618,6 +1003,20 @@ async function handleApi(request, response, url) {
 
   if (request.method === "GET" && url.pathname === "/api/profiles") {
     sendJson(response, 200, { profiles: readProfiles().map(toPublicProfile) });
+    return true;
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/logout") {
+    const token = getSessionToken(request);
+
+    if (token) {
+      sessions.delete(token);
+      saveSessions();
+    }
+
+    sendJson(response, 200, { ok: true }, {
+      "Set-Cookie": createExpiredSessionCookie()
+    });
     return true;
   }
 
@@ -695,6 +1094,13 @@ async function handleApi(request, response, url) {
 
   return false;
 }
+
+loadSessions();
+cleanupSessions();
+loadOnlineRooms();
+ensurePublicRooms();
+cleanupOnlineRooms();
+saveOnlineRooms();
 
 http.createServer(async (request, response) => {
   let url;
