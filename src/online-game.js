@@ -1,4 +1,5 @@
 (() => {
+  const POLL_INTERVAL_MS = 280;
   let state = null;
   let pollId = null;
 
@@ -65,7 +66,7 @@
   }
 
   function renderResult() {
-    const { room, playerIndex, resultPanel, resultTitle, resultSummary, onComplete } = state;
+    const { room, playerIndex, resultPanel, resultTitle, resultSummary, replayButton, changeSettingsButton, onComplete } = state;
     const winner = room.game.winner;
 
     if (room.status !== "finished") {
@@ -82,7 +83,11 @@
       resultTitle.textContent = "Вы проиграли";
     }
 
-    resultSummary.textContent = `Счет: ${room.game.scores[0]}-${room.game.scores[1]}. Ходы: ${room.game.moves}.`;
+    state.resultBaseSummary = `Счет: ${room.game.scores[0]}-${room.game.scores[1]}. Ходы: ${room.game.moves}.`;
+    resultSummary.textContent = state.resultBaseSummary;
+    replayButton.disabled = false;
+    replayButton.textContent = "Реванш";
+    changeSettingsButton.textContent = "В лобби";
     resultPanel.classList.add("is-visible");
     resultPanel.setAttribute("aria-hidden", "false");
     if (!state.resultHandled) {
@@ -128,8 +133,60 @@
       </div>
     `;
     memoryBoard.innerHTML = "";
+    memoryBoard.style.removeProperty("width");
+    memoryBoard.style.removeProperty("--columns");
+    memoryBoard.style.removeProperty("--rows");
+    delete memoryBoard.dataset.columns;
+    delete memoryBoard.dataset.rows;
+    delete memoryBoard.dataset.size;
+    memoryBoard.classList.remove("is-waiting-turn");
+    renderWaitingInvite();
     resultPanel.classList.remove("is-visible");
     resultPanel.setAttribute("aria-hidden", "true");
+  }
+
+  function renderWaitingInvite() {
+    const { room, memoryBoard } = state;
+
+    if (!room.isPrivate) {
+      const note = document.createElement("div");
+
+      note.className = "waiting-room-note";
+      note.textContent = "Ожидаем второго игрока в открытой комнате.";
+      memoryBoard.append(note);
+      return;
+    }
+
+    const panel = document.createElement("section");
+    const title = document.createElement("h3");
+    const textarea = document.createElement("textarea");
+    const button = document.createElement("button");
+    const inviteText = state.privateInviteText || [
+      `Код входа: ${room.code}`,
+      "Пароль: пароль, который придумал создатель"
+    ].join("\n");
+
+    panel.className = "waiting-invite";
+    title.textContent = "Приглашение для соперника";
+    textarea.readOnly = true;
+    textarea.rows = 2;
+    textarea.value = inviteText;
+    button.className = "copy-invite-button";
+    button.type = "button";
+    button.textContent = "Копировать приглашение";
+    button.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(textarea.value);
+        button.textContent = "Скопировано";
+      } catch {
+        textarea.focus();
+        textarea.select();
+        button.textContent = "Нажмите Ctrl+C";
+      }
+    });
+
+    panel.append(title, textarea, button);
+    memoryBoard.append(panel);
   }
 
   function renderRoom(room) {
@@ -160,6 +217,7 @@
     renderScore();
     renderBoard();
     renderResult();
+    window.ChessLegendsBoardFit?.scheduleMemoryBoardFit(memoryBoard);
   }
 
   function createOnlineGameController({ elements, difficultySettings, onBackToLobby, onComplete, onStateChange }) {
@@ -173,6 +231,37 @@
       replayButton,
       changeSettingsButton
     } = elements;
+
+    async function requestRematch() {
+      if (!state) {
+        return;
+      }
+
+      replayButton.disabled = true;
+      replayButton.textContent = "Ждем...";
+
+      try {
+        const data = await requestJson(`/api/online/rooms/${encodeURIComponent(state.room.id)}/rematch`, {
+          playerToken: state.playerToken
+        });
+
+        state.playerToken = data.playerToken;
+        state.playerIndex = data.room.playerIndex || 0;
+        state.cardElements = [];
+        state.resultHandled = false;
+        renderRoom(data.room);
+        startPolling();
+        onStateChange?.("onlineGame", getSnapshot());
+      } catch (error) {
+        const message = /not found|не найд/i.test(error.message || "")
+          ? "Комната не найдена на сервере. Вернитесь в лобби и создайте новую партию."
+          : error.message || "Не удалось начать реванш.";
+
+        replayButton.disabled = false;
+        replayButton.textContent = "Реванш";
+        resultSummary.textContent = `${state.resultBaseSummary || ""} ${message}`.trim();
+      }
+    }
 
     async function pollRoom() {
       if (!state) {
@@ -193,7 +282,7 @@
       stopPolling();
       pollId = window.setInterval(() => {
         pollRoom().catch(() => {});
-      }, 900);
+      }, POLL_INTERVAL_MS);
     }
 
     async function revealCard(index) {
@@ -209,7 +298,7 @@
       renderRoom(data.room);
     }
 
-    function start(room, playerToken) {
+    function start(room, playerToken, options = {}) {
       stop();
       state = {
         room,
@@ -222,8 +311,12 @@
         resultPanel,
         resultTitle,
         resultSummary,
+        replayButton,
+        changeSettingsButton,
         cardElements: [],
         resultHandled: false,
+        resultBaseSummary: "",
+        privateInviteText: options.privateInviteText || "",
         onComplete
       };
 
@@ -232,14 +325,14 @@
       onStateChange?.("onlineGame", getSnapshot());
     }
 
-    async function resumeActive() {
+    async function resumeActive(options = {}) {
       const data = await requestJson("/api/online/active");
 
       if (!data.room || !data.playerToken) {
         return false;
       }
 
-      start(data.room, data.playerToken);
+      start(data.room, data.playerToken, options);
       return true;
     }
 
@@ -259,7 +352,8 @@
     function getSnapshot() {
       return state ? {
         onlineRoomId: state.room.id,
-        onlinePlayerToken: state.playerToken
+        onlinePlayerToken: state.playerToken,
+        privateInviteText: state.privateInviteText || ""
       } : {};
     }
 
@@ -277,7 +371,7 @@
 
     function init() {
       memoryBoard.addEventListener("click", handleBoardClick);
-      replayButton.onclick = onBackToLobby;
+      replayButton.onclick = requestRematch;
       changeSettingsButton.onclick = onBackToLobby;
     }
 

@@ -278,7 +278,11 @@
     };
 
     updateScorePanel();
+    window.ChessLegendsBoardFit?.scheduleMemoryBoardFit(memoryBoard);
 
+    replayButton.disabled = false;
+    replayButton.textContent = "Играть снова";
+    changeSettingsButton.textContent = "В меню";
     memoryBoard.removeEventListener("click", handleCardClick);
     memoryBoard.addEventListener("click", handleCardClick);
 

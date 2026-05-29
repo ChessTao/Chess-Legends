@@ -9,8 +9,8 @@
     <meta property="og:description" content="Memory-игра с шахматными легендами, локальными профилями и режимом для одного или двух игроков.">
     <meta property="og:type" content="website">
     <title>Шахматные Легенды</title>
-    <link rel="stylesheet" href="styles/styles.css?v=20260525-cursor">
-    <link rel="stylesheet" href="styles/intro.css">
+    <link rel="stylesheet" href="styles/styles.css?v=20260529-online-3">
+    <link rel="stylesheet" href="styles/intro.css?v=20260529-online-3">
   </head>
   <body>
     <main class="app" aria-label="Шахматные Легенды">
@@ -137,9 +137,6 @@
           <header class="setup-header">
             <h2 class="profile-logo">Шахматные Легенды</h2>
             <p class="setup-subtitle">Сетевая игра</p>
-            <div class="setup-player">
-              <span id="onlineCurrentPlayerLabel">Игрок: Игрок</span>
-            </div>
           </header>
 
           <section class="online-room-panel" aria-labelledby="onlineRoomTitle">
@@ -204,37 +201,49 @@
             <section class="online-private-panel" aria-labelledby="onlinePrivateRoomTitle">
               <div>
                 <h3 id="onlinePrivateRoomTitle">Приватная комната</h3>
+                <p class="profile-subtitle">Она не появляется в открытом списке. Передайте сопернику код и пароль.</p>
               </div>
 
               <div class="online-private-room">
-                <label class="profile-field">
-                  <span>Название</span>
-                  <input id="onlineRoomName" type="text" maxlength="24" autocomplete="off">
-                </label>
-                <label class="profile-field">
-                  <span>Уровень</span>
-                  <select id="onlineRoomLevel">
-                    <option>Начинающий</option>
-                    <option>КМС</option>
-                    <option>Мастер</option>
-                    <option>Гроссмейстер</option>
-                  </select>
-                </label>
-                <label class="profile-field">
-                  <span>Пароль</span>
-                  <input id="onlineRoomPassword" type="password" maxlength="32" autocomplete="new-password" placeholder="Для приглашения">
-                </label>
-                <button class="online-room-action" id="createPrivateRoomButton" type="button">Создать приватную</button>
-                <label class="profile-field">
-                  <span>Код входа</span>
-                  <input id="onlineRoomCode" type="text" maxlength="12" autocomplete="off" placeholder="Например A1B2C3">
-                </label>
-                <button class="online-room-action" id="joinPrivateRoomButton" type="button">Войти в приватную</button>
+                <section class="online-private-column" aria-labelledby="onlineCreatePrivateTitle">
+                  <h4 id="onlineCreatePrivateTitle">Создать приглашение</h4>
+                  <label class="profile-field">
+                    <span>Уровень</span>
+                    <select id="onlineRoomLevel">
+                      <option>Начинающий</option>
+                      <option>КМС</option>
+                      <option>Мастер</option>
+                      <option>Гроссмейстер</option>
+                    </select>
+                  </label>
+                  <label class="profile-field">
+                    <span>Название комнаты</span>
+                    <input id="onlineRoomName" type="text" maxlength="24" autocomplete="off" placeholder="Например Матч с другом" required>
+                  </label>
+                  <label class="profile-field">
+                    <span>Пароль для друга</span>
+                    <input id="onlineCreateRoomPassword" type="password" maxlength="32" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Придумайте пароль">
+                  </label>
+                  <button class="online-room-action" id="createPrivateRoomButton" type="button">Создать и ждать</button>
+                </section>
+
+                <section class="online-private-column" aria-labelledby="onlineJoinPrivateTitle">
+                  <h4 id="onlineJoinPrivateTitle">Подключиться по приглашению</h4>
+                  <label class="profile-field">
+                    <span>Код входа</span>
+                    <input id="onlineRoomCode" type="text" maxlength="12" autocomplete="off" placeholder="Например A1B2C3">
+                  </label>
+                  <label class="profile-field">
+                    <span>Пароль от создателя</span>
+                    <input id="onlineJoinRoomPassword" type="password" maxlength="32" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Введите пароль">
+                  </label>
+                  <button class="online-room-action" id="joinPrivateRoomButton" type="button">Войти по коду</button>
+                </section>
               </div>
             </section>
 
             <p class="online-status" id="onlineStatus" aria-live="polite">
-              Открытые комнаты подходят для быстрой партии.
+              Открытые комнаты видны всем. В приватную входят только по коду и паролю.
             </p>
           </section>
 
@@ -397,17 +406,18 @@
       </section>
     </main>
 
-    <script src="data/data.js"></script>
-    <script src="src/app-state.js"></script>
-    <script src="src/screens.js"></script>
-    <script src="src/setup.js"></script>
-    <script src="src/profile.js"></script>
-    <script src="src/profile-form.js"></script>
-    <script src="src/game-preview.js"></script>
-    <script src="src/intro.js"></script>
-    <script src="src/info-pages.js"></script>
-    <script src="src/online-lobby.js"></script>
-    <script src="src/online-game.js"></script>
-    <script src="src/script.js"></script>
+    <script src="data/data.js?v=20260529-online-3"></script>
+    <script src="src/app-state.js?v=20260529-online-3"></script>
+    <script src="src/screens.js?v=20260529-online-3"></script>
+    <script src="src/setup.js?v=20260529-online-3"></script>
+    <script src="src/profile.js?v=20260529-online-3"></script>
+    <script src="src/profile-form.js?v=20260529-online-3"></script>
+    <script src="src/board-fit.js?v=20260529-online-3"></script>
+    <script src="src/game-preview.js?v=20260529-online-3"></script>
+    <script src="src/intro.js?v=20260529-online-3"></script>
+    <script src="src/info-pages.js?v=20260529-online-3"></script>
+    <script src="src/online-lobby.js?v=20260529-online-3"></script>
+    <script src="src/online-game.js?v=20260529-online-3"></script>
+    <script src="src/script.js?v=20260529-online-3"></script>
   </body>
 </html>

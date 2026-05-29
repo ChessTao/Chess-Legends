@@ -21,7 +21,8 @@
       roomList,
       roomName,
       roomLevel,
-      roomPassword,
+      createPassword,
+      joinPassword,
       roomCode,
       status,
       createPrivateButton,
@@ -32,6 +33,7 @@
     let selectedPublicRoomName = "";
     let selectedPublicRoomLevel = "";
     let selectedPublicRoomId = "";
+    let refreshTimerId = 0;
 
     function setStatus(message) {
       if (status) {
@@ -50,9 +52,7 @@
       return {
         selectedPublicRoomId,
         selectedPublicRoomName,
-        selectedPublicRoomLevel,
-        privateRoomName: roomName?.value.trim() || "",
-        privateRoomLevel: roomLevel?.value || DEFAULT_PRIVATE_LEVEL
+        selectedPublicRoomLevel
       };
     }
 
@@ -61,13 +61,7 @@
       selectedPublicRoomName = state.selectedPublicRoomName || "";
       selectedPublicRoomLevel = state.selectedPublicRoomLevel || "";
 
-      if (roomName) {
-        roomName.value = state.privateRoomName || "";
-      }
-
-      if (roomLevel && (state.privateRoomLevel || state.onlineRoomLevel)) {
-        roomLevel.value = state.privateRoomLevel || state.onlineRoomLevel;
-      }
+      resetPrivateFields();
 
       roomList?.querySelectorAll(".online-room-card").forEach((button) => {
         const isSelected = button.dataset.roomName === selectedPublicRoomName
@@ -75,6 +69,59 @@
 
         button.classList.toggle("is-selected", isSelected);
       });
+    }
+
+    function resetPrivateFields() {
+      roomName && (roomName.value = "");
+      createPassword && (createPassword.value = "");
+      joinPassword && (joinPassword.value = "");
+      roomCode && (roomCode.value = "");
+      roomLevel && (roomLevel.value = DEFAULT_PRIVATE_LEVEL);
+    }
+
+    function getRoomState(room, players) {
+      if (room?.status === "playing") {
+        return {
+          label: "Идет партия",
+          title: "Партия уже идет",
+          className: "is-busy"
+        };
+      }
+
+      if (players === 1) {
+        const playerName = room.players?.[0]?.name || "игрок";
+
+        return {
+          label: "Ждет 1/2",
+          title: `В комнате ждет ${playerName}`,
+          className: "is-waiting"
+        };
+      }
+
+      return {
+        label: "Свободно",
+        title: "Свободная комната",
+        className: "is-free"
+      };
+    }
+
+    function ensureRoomStateBadge(button) {
+      let badge = button.querySelector(".online-room-state");
+
+      if (!badge) {
+        badge = document.createElement("span");
+        badge.className = "online-room-state";
+        button.append(badge);
+      }
+
+      return badge;
+    }
+
+    function buildPrivateInviteText(room, password) {
+      return [
+        `Код входа: ${room.code}`,
+        `Пароль: ${password}`
+      ].join("\n");
     }
 
     async function refreshRooms() {
@@ -85,10 +132,17 @@
         roomList?.querySelectorAll(".online-room-card").forEach((button) => {
           const room = roomsByKey.get(`${button.dataset.roomLevel}:${button.dataset.roomName}`);
           const players = room?.players?.length || 0;
+          const state = getRoomState(room, players);
+          const badge = ensureRoomStateBadge(button);
 
           button.dataset.roomId = room?.id || "";
-          button.classList.toggle("is-busy", room?.status === "playing");
-          button.title = room?.status === "playing" ? "Партия уже идет" : `${players}/2 игроков`;
+          button.dataset.roomPlayers = String(players);
+          button.classList.toggle("is-free", state.className === "is-free");
+          button.classList.toggle("is-waiting", state.className === "is-waiting");
+          button.classList.toggle("is-busy", state.className === "is-busy");
+          button.title = state.title;
+          button.setAttribute("aria-label", `${button.dataset.roomName}: ${state.title}`);
+          badge.textContent = state.label;
         });
       } catch {
         setStatus("Не удалось обновить список комнат. Проверьте, запущен ли сервер.");
@@ -121,13 +175,20 @@
     }
 
     async function createPrivateRoom() {
-      const privateRoomName = roomName.value.trim() || "Приватная комната";
+      const privateRoomName = roomName.value.trim();
       const privateRoomLevel = roomLevel.value;
-      const password = roomPassword.value.trim();
+      const password = createPassword.value.trim();
+
+      if (!privateRoomName) {
+        setStatus("Введите название приватной комнаты.");
+        roomName.focus();
+        save();
+        return;
+      }
 
       if (!password) {
-        setStatus("Введите пароль для приватной комнаты.");
-        roomPassword.focus();
+        setStatus("Придумайте пароль для приглашения. Его нужно передать сопернику вместе с кодом.");
+        createPassword.focus();
         save();
         return;
       }
@@ -145,18 +206,20 @@
         roomCode.value = data.room.code;
       }
 
-      setStatus(`Приватная комната «${data.room.name}» создана. Код: ${data.room.code}.`);
-      save({ privateRoomCode: data.room.code });
-      onRoomJoined?.(data.room, data.playerToken);
+      const privateInviteText = buildPrivateInviteText(data.room, password);
+
+      setStatus(`Приватная комната «${data.room.name}» создана. Она не появится в списке: передайте сопернику код ${data.room.code} и пароль.`);
+      save();
+      onRoomJoined?.(data.room, data.playerToken, { privateInviteText });
     }
 
     async function joinPrivateRoom() {
       const code = roomCode.value.trim();
-      const password = roomPassword.value.trim();
+      const password = joinPassword.value.trim();
 
       if (!code || !password) {
-        setStatus("Введите код и пароль приватной комнаты.");
-        (code ? roomPassword : roomCode).focus();
+        setStatus("Введите код входа и пароль, которые дал создатель комнаты.");
+        (code ? joinPassword : roomCode).focus();
         return;
       }
 
@@ -197,15 +260,17 @@
       });
       roomName?.addEventListener("input", () => save());
       roomLevel?.addEventListener("change", () => save());
-      roomPassword?.addEventListener("input", () => save());
-      roomCode?.addEventListener("input", () => save());
       refreshRooms();
+      if (!refreshTimerId) {
+        refreshTimerId = window.setInterval(refreshRooms, 4000);
+      }
     }
 
     return {
       getSnapshot,
       init,
       refreshRooms,
+      resetPrivateFields,
       restore
     };
   }

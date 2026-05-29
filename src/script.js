@@ -49,7 +49,6 @@ const onlineModeButton = document.querySelector("#onlineModeButton");
 const modeProfileButton = document.querySelector("#modeProfileButton");
 const modeLogoutButton = document.querySelector("#modeLogoutButton");
 const modeCurrentPlayerLabel = document.querySelector("#modeCurrentPlayerLabel");
-const onlineCurrentPlayerLabel = document.querySelector("#onlineCurrentPlayerLabel");
 const playButton = document.querySelector("#playButton");
 const backToProfileButton = document.querySelector("#backToProfileButton");
 const backToModeFromSetupButton = document.querySelector("#backToModeFromSetupButton");
@@ -218,7 +217,8 @@ const onlineLobby = createOnlineLobbyController({
     roomList: document.querySelector("#onlineRoomList"),
     roomName: document.querySelector("#onlineRoomName"),
     roomLevel: document.querySelector("#onlineRoomLevel"),
-    roomPassword: document.querySelector("#onlineRoomPassword"),
+    createPassword: document.querySelector("#onlineCreateRoomPassword"),
+    joinPassword: document.querySelector("#onlineJoinRoomPassword"),
     roomCode: document.querySelector("#onlineRoomCode"),
     status: document.querySelector("#onlineStatus"),
     createPrivateButton: document.querySelector("#createPrivateRoomButton"),
@@ -361,6 +361,14 @@ function findProfileByName(name) {
   return listProfiles().find((profile) => normalizeProfileName(profile.name || "") === normalizedName) || null;
 }
 
+function renderProfileEntryForMode() {
+  const profile = getProfileMode() === "login" ? loadProfile() : createBlankProfile();
+
+  renderProfile(profileElements, profile);
+  normalizeProfileCountryField(profileElements);
+  updateCurrentPlayerLabel();
+}
+
 function renderCurrentPlayerLabel(label) {
   if (!label) {
     return;
@@ -392,7 +400,7 @@ function updateCurrentPlayerLabel() {
     modeLogoutButton.hidden = false;
   }
 
-  [currentPlayerLabel, modeCurrentPlayerLabel, onlineCurrentPlayerLabel].forEach(renderCurrentPlayerLabel);
+  [currentPlayerLabel, modeCurrentPlayerLabel].forEach(renderCurrentPlayerLabel);
 }
 
 function showProfileScreen() {
@@ -451,6 +459,9 @@ function showOnlineScreen() {
   normalizeProfileCountryField(profileElements);
   saveProfileFromForm(profileElements);
   updateCurrentPlayerLabel();
+  onlineLobby.resetPrivateFields();
+  window.setTimeout(() => onlineLobby.resetPrivateFields(), 0);
+  onlineLobby.refreshRooms();
   showScreen(onlineScreen);
   saveState("online");
 }
@@ -525,11 +536,11 @@ function getProfileForOnline() {
   return loadProfile();
 }
 
-function startOnlineGame(room, playerToken) {
+function startOnlineGame(room, playerToken, options = {}) {
   stopGame();
   hasConfirmedProfile = true;
   updateSideProfileButton();
-  onlineGame.start(room, playerToken);
+  onlineGame.start(room, playerToken, options);
   showScreen(gameScreen);
   saveState("onlineGame");
 }
@@ -583,7 +594,7 @@ function restoreState() {
     showScreen(hasConfirmedProfile ? playModeScreen : profileScreen);
 
     if (hasConfirmedProfile) {
-      onlineGame.resumeActive()
+      onlineGame.resumeActive({ privateInviteText: state.privateInviteText || "" })
         .then((resumed) => {
           if (resumed) {
             hasConfirmedProfile = true;
@@ -634,6 +645,11 @@ initCountryList();
 initProfile(profileElements);
 syncProfilesFromServer()
   .then(() => {
+    if (!hasConfirmedProfile && getActiveScreen(profileScreen) === profileScreen) {
+      renderProfileEntryForMode();
+      return;
+    }
+
     renderProfile(profileElements, loadProfile());
     normalizeProfileCountryField(profileElements);
     updateCurrentPlayerLabel();
@@ -647,8 +663,14 @@ startButton.addEventListener("click", () => {
   saveState("profile");
 });
 
-loginProfileButton.addEventListener("click", () => setProfileMode("login"));
-registerProfileButton.addEventListener("click", () => setProfileMode("register"));
+loginProfileButton.addEventListener("click", () => {
+  setProfileMode("login");
+  renderProfileEntryForMode();
+});
+registerProfileButton.addEventListener("click", () => {
+  setProfileMode("register");
+  renderProfileEntryForMode();
+});
 confirmLoginButton.addEventListener("click", confirmProfileEntry);
 
 infoPages.init();

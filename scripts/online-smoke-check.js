@@ -127,6 +127,91 @@ async function reveal(roomId, player, index) {
   });
 }
 
+async function rematch(roomId, player) {
+  return request(`/api/online/rooms/${encodeURIComponent(roomId)}/rematch`, {
+    method: "POST",
+    cookie: player.cookie,
+    body: {
+      playerToken: player.playerToken
+    }
+  });
+}
+
+async function finishRoom(room, players) {
+  let currentRoom = room;
+
+  while (currentRoom.status !== "finished") {
+    const openCard = currentRoom.game.cards.find((card) => card.isOpen && !card.isMatched);
+    const currentPlayer = players.find((player) => player.playerIndex === currentRoom.game.turnIndex);
+
+    assert(currentPlayer, "current online player should be known");
+
+    if (openCard) {
+      const mateIndex = currentRoom.game.cards.findIndex((card) => {
+        return !card.isOpen && !card.isMatched && card.pairId === openCard.pairId;
+      });
+
+      assert(mateIndex >= 0, "open card should have a closed mate");
+      const result = await reveal(currentRoom.id, currentPlayer, mateIndex);
+
+      assert(result.response.status === 200, `mate finishing reveal failed with ${result.response.status}`);
+      currentRoom = result.data.room;
+      continue;
+    }
+
+    const pairs = new Map();
+
+    currentRoom.game.cards.forEach((card, index) => {
+      if (card.isMatched) {
+        return;
+      }
+
+      const indexes = pairs.get(card.pairId) || [];
+      indexes.push(index);
+      pairs.set(card.pairId, indexes);
+    });
+
+    const pairIndexes = [...pairs.values()].find((indexes) => indexes.length >= 2);
+
+    assert(pairIndexes, "unfinished room should contain a revealable pair");
+
+    let result = await reveal(currentRoom.id, currentPlayer, pairIndexes[0]);
+    assert(result.response.status === 200, `first finishing reveal failed with ${result.response.status}`);
+    currentRoom = result.data.room;
+
+    result = await reveal(currentRoom.id, currentPlayer, pairIndexes[1]);
+    assert(result.response.status === 200, `second finishing reveal failed with ${result.response.status}`);
+    currentRoom = result.data.room;
+  }
+
+  return currentRoom;
+}
+
+async function assertRematchStarts(roomId, players) {
+  const firstResult = await rematch(roomId, players[0]);
+
+  assert(firstResult.response.status === 200, `first rematch failed with ${firstResult.response.status}`);
+  assert(firstResult.data.room?.status === "waiting", "first rematch should wait for second player");
+  players[0].playerToken = firstResult.data.playerToken;
+  players[0].playerIndex = firstResult.data.room.playerIndex;
+
+  const secondResult = await rematch(roomId, players[1]);
+
+  assert(secondResult.response.status === 200, `second rematch failed with ${secondResult.response.status}`);
+  assert(secondResult.data.room?.status === "playing", "second rematch should start game");
+  players[1].playerToken = secondResult.data.playerToken;
+  players[1].playerIndex = secondResult.data.room.playerIndex;
+
+  const retryResult = await rematch(roomId, players[0]);
+
+  assert(retryResult.response.status === 200, `idempotent rematch retry failed with ${retryResult.response.status}`);
+  assert(retryResult.data.room?.status === "playing", "idempotent rematch retry should return active game");
+  players[0].playerToken = retryResult.data.playerToken;
+  players[0].playerIndex = retryResult.data.room.playerIndex;
+
+  return retryResult.data.room;
+}
+
 async function assertWrongTurnRejected(room, players) {
   const wrongPlayer = players.find((player) => player.playerIndex !== room.game.turnIndex);
   const result = await reveal(room.id, wrongPlayer, 0);
@@ -203,8 +288,11 @@ async function main() {
   await assertActiveRoomRestores(playerA, updatedRoom.id);
   await assertActiveRoomRestores(playerB, updatedRoom.id);
 
-  await leaveRoom(updatedRoom.id, players[0]);
-  await leaveRoom(updatedRoom.id, players[1]);
+  const finishedRoom = await finishRoom(updatedRoom, players);
+  const rematchRoom = await assertRematchStarts(finishedRoom.id, players);
+
+  await leaveRoom(rematchRoom.id, players[0]);
+  await leaveRoom(rematchRoom.id, players[1]);
 
   console.log("Online smoke/e2e check passed.");
 }

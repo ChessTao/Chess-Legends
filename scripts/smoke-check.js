@@ -28,14 +28,18 @@ const profileJs = read("src/profile.js");
 const serverJs = read("server.js");
 const packageJson = read("package.json");
 
-const appStateIndex = indexHtml.indexOf('src="src/app-state.js"');
-const screensIndex = indexHtml.indexOf('src="src/screens.js"');
-const profileFormIndex = indexHtml.indexOf('src="src/profile-form.js"');
-const gameIndex = indexHtml.indexOf('src="src/game-preview.js"');
-const infoPagesIndex = indexHtml.indexOf('src="src/info-pages.js"');
-const onlineLobbyIndex = indexHtml.indexOf('src="src/online-lobby.js"');
-const onlineGameIndex = indexHtml.indexOf('src="src/online-game.js"');
-const scriptIndex = indexHtml.indexOf('src="src/script.js"');
+function getScriptIndex(scriptPath) {
+  return indexHtml.search(new RegExp(`src="${scriptPath.replace(".", "\\.")}(?:\\?[^"]*)?"`));
+}
+
+const appStateIndex = getScriptIndex("src/app-state.js");
+const screensIndex = getScriptIndex("src/screens.js");
+const profileFormIndex = getScriptIndex("src/profile-form.js");
+const gameIndex = getScriptIndex("src/game-preview.js");
+const infoPagesIndex = getScriptIndex("src/info-pages.js");
+const onlineLobbyIndex = getScriptIndex("src/online-lobby.js");
+const onlineGameIndex = getScriptIndex("src/online-game.js");
+const scriptIndex = getScriptIndex("src/script.js");
 
 assert(appStateIndex > -1, "index.html must load src/app-state.js");
 assert(profileFormIndex > -1, "index.html must load src/profile-form.js");

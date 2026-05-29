@@ -43,10 +43,11 @@ const types = {
 function getHeaders(type, filePath) {
   const extension = path.extname(filePath);
   const isHtml = extension === ".html";
+  const isLiveAsset = [".css", ".js"].includes(extension);
 
   return {
     "Content-Type": type,
-    "Cache-Control": isHtml ? "no-cache" : "public, max-age=3600",
+    "Cache-Control": isHtml || isLiveAsset ? "no-cache, no-store, must-revalidate" : "public, max-age=3600",
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "strict-origin-when-cross-origin"
   };
@@ -371,10 +372,10 @@ function touchPlayer(player, status = "connected") {
   }
 }
 
-function createRoom({ id = createRoomId(), name, level, isPrivate = false, passwordHash = "", passwordSalt = "" }) {
+function createRoom({ id = createRoomId(), code = "", name, level, isPrivate = false, passwordHash = "", passwordSalt = "", rematchProfileIds = [] }) {
   return {
     id,
-    code: isPrivate ? crypto.randomBytes(3).toString("hex").toUpperCase() : "",
+    code: isPrivate ? code || crypto.randomBytes(3).toString("hex").toUpperCase() : "",
     name,
     level,
     isPrivate,
@@ -382,6 +383,7 @@ function createRoom({ id = createRoomId(), name, level, isPrivate = false, passw
     passwordSalt,
     status: "waiting",
     players: [],
+    rematchProfileIds,
     game: null,
     resultSaved: false,
     updatedAt: Date.now()
@@ -411,6 +413,7 @@ function normalizeLoadedRoom(room) {
     passwordSalt: String(room.passwordSalt || legacyPasswordHash?.passwordSalt || ""),
     status: ["waiting", "playing", "finished"].includes(room.status) ? room.status : "waiting",
     players: Array.isArray(room.players) ? room.players : [],
+    rematchProfileIds: Array.isArray(room.rematchProfileIds) ? room.rematchProfileIds.map(String) : [],
     game: room.game && typeof room.game === "object" ? room.game : null,
     resultSaved: Boolean(room.resultSaved),
     updatedAt: Number(room.updatedAt) || Date.now()
@@ -479,6 +482,19 @@ function isPublicRoom(room) {
 
 function resetPublicRoom(room) {
   return createRoom({ id: room.id, name: room.name, level: room.level });
+}
+
+function resetRoomForRematch(room) {
+  return createRoom({
+    id: room.id,
+    code: room.code,
+    name: room.name,
+    level: room.level,
+    isPrivate: room.isPrivate,
+    passwordHash: room.passwordHash,
+    passwordSalt: room.passwordSalt,
+    rematchProfileIds: room.players.map((player) => player.id)
+  });
 }
 
 function getRoomPlayerByProfile(room, profileId) {
@@ -899,8 +915,15 @@ async function handleApi(request, response, url) {
       return true;
     }
 
+    const roomName = String(body.name || "").trim().replace(/\s+/g, " ").slice(0, 24);
+
+    if (!roomName) {
+      sendJson(response, 400, { error: "Название приватной комнаты обязательно." });
+      return true;
+    }
+
     const room = createRoom({
-      name: String(body.name || "").trim().slice(0, 24) || "Приватная комната",
+      name: roomName,
       level: normalizeOnlineLevel(body.level),
       isPrivate: true,
       ...hashPassword(password)
@@ -968,6 +991,72 @@ async function handleApi(request, response, url) {
 
     revealOnlineCard(room, player, Number(body.index));
     sendJson(response, 200, { room: serializeRoom(room, player.token) });
+    return true;
+  }
+
+  const onlineRoomRematchMatch = url.pathname.match(/^\/api\/online\/rooms\/([^/]+)\/rematch$/);
+
+  if (request.method === "POST" && onlineRoomRematchMatch) {
+    const profile = requireSessionProfile(request);
+    const roomId = decodeURIComponent(onlineRoomRematchMatch[1]);
+    const room = onlineRooms.get(roomId);
+    const body = await readRequestJson(request);
+    const playerToken = String(body.playerToken || "");
+
+    if (!room) {
+      sendJson(response, 404, { error: "Комната не найдена." });
+      return true;
+    }
+
+    if (room.status === "finished") {
+      const previousPlayer = playerToken ? getRoomPlayer(room, playerToken) : getRoomPlayerByProfile(room, profile.id);
+
+      if (!previousPlayer || previousPlayer.id !== profile.id) {
+        sendJson(response, 403, { error: "Нет доступа к этой комнате." });
+        return true;
+      }
+
+      const rematchRoom = resetRoomForRematch(room);
+      onlineRooms.set(roomId, rematchRoom);
+      const player = joinRoom(rematchRoom, profile);
+
+      sendJson(response, 200, {
+        playerToken: player.token,
+        room: serializeRoom(rematchRoom, player.token)
+      });
+      return true;
+    }
+
+    if (room.status === "waiting") {
+      if (room.rematchProfileIds?.length && !room.rematchProfileIds.includes(profile.id)) {
+        sendJson(response, 403, { error: "Нет доступа к этой комнате." });
+        return true;
+      }
+
+      const player = joinRoom(room, profile);
+
+      sendJson(response, 200, {
+        playerToken: player.token,
+        room: serializeRoom(room, player.token)
+      });
+      return true;
+    }
+
+    if (room.status === "playing") {
+      const player = getRoomPlayerByProfile(room, profile.id);
+
+      if (player) {
+        touchPlayer(player);
+        room.updatedAt = Date.now();
+        sendJson(response, 200, {
+          playerToken: player.token,
+          room: serializeRoom(room, player.token)
+        });
+        return true;
+      }
+    }
+
+    sendJson(response, 409, { error: "Реванш уже начался. Вернитесь в лобби и подключитесь заново." });
     return true;
   }
 
