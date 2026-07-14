@@ -406,6 +406,12 @@ function updateCurrentPlayerLabel() {
 function showProfileScreen() {
   stopGame();
   onlineGame.stop();
+  if (!hasConfirmedProfile) {
+    resetProfileForm();
+    setProfileMode("register");
+    renderProfile(accountElements, createBlankProfile());
+    updateCurrentPlayerLabel();
+  }
   showScreen(profileScreen);
   saveState("profile");
 }
@@ -547,11 +553,12 @@ function startOnlineGame(room, playerToken, options = {}) {
 
 function restoreState() {
   const state = loadAppState();
-  const shouldRestoreProfile = state.rememberProfile === true && hasSavedProfile();
   const savedScreenName = state.screen || "intro";
   const startupUrl = new URL(window.location.href);
   const requestedInfoPage = startupUrl.searchParams.get("infoPage");
   const requestedScreen = startupUrl.searchParams.get("openScreen");
+  const shouldOpenIntro = requestedScreen === "intro";
+  const shouldRestoreProfile = !shouldOpenIntro && state.rememberProfile === true && hasSavedProfile();
 
   hasConfirmedProfile = shouldRestoreProfile && savedScreenName !== "intro" && savedScreenName !== "profile";
   updateSideProfileButton();
@@ -582,6 +589,14 @@ function restoreState() {
     normalizeProfileCountryField(accountElements);
     showScreen(accountScreen);
     saveState("account");
+    return;
+  }
+
+  if (shouldOpenIntro) {
+    startupUrl.searchParams.delete("openScreen");
+    window.history.replaceState({}, "", startupUrl);
+    showScreen(introScreen);
+    saveState("intro");
     return;
   }
 
@@ -645,6 +660,12 @@ initCountryList();
 initProfile(profileElements);
 syncProfilesFromServer()
   .then(() => {
+    if (!hasConfirmedProfile && getActiveScreen(introScreen) === introScreen) {
+      renderProfile(profileElements, createBlankProfile());
+      renderProfile(accountElements, createBlankProfile());
+      return;
+    }
+
     if (!hasConfirmedProfile && getActiveScreen(profileScreen) === profileScreen) {
       renderProfileEntryForMode();
       return;

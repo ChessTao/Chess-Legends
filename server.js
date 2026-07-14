@@ -11,6 +11,7 @@ const runtimeDir = path.join(root, ".runtime");
 const profilesFile = path.join(runtimeDir, "profiles.json");
 const sessionsFile = path.join(runtimeDir, "sessions.json");
 const roomsFile = path.join(runtimeDir, "online-rooms.json");
+const serverErrorsFile = path.join(runtimeDir, "server-errors.log");
 const sessions = new Map();
 const onlineRooms = new Map();
 const privateRoomCreateTimes = new Map();
@@ -93,6 +94,32 @@ function readRequestJson(request) {
 
 function ensureRuntimeDir() {
   fs.mkdirSync(runtimeDir, { recursive: true });
+}
+
+function getApiErrorStatus(error) {
+  return error.statusCode || (error.message === "Payload too large" ? 413 : 400);
+}
+
+function logApiError(request, url, error) {
+  const status = getApiErrorStatus(error);
+  const lines = [
+    `[${new Date().toISOString()}] ${request.method} ${url.pathname}${url.search} -> ${status}`,
+    `message: ${error.message || String(error)}`,
+    `remote: ${request.socket?.remoteAddress || "unknown"}`,
+    `user-agent: ${request.headers["user-agent"] || "unknown"}`
+  ];
+
+  if (!error.statusCode && error.stack) {
+    lines.push("stack:");
+    lines.push(error.stack);
+  }
+
+  try {
+    ensureRuntimeDir();
+    fs.appendFileSync(serverErrorsFile, `${lines.join("\n")}\n\n`, "utf8");
+  } catch (logError) {
+    console.error("Failed to write API error log:", logError);
+  }
 }
 
 function readJsonFile(filePath, fallback) {
@@ -1209,7 +1236,8 @@ http.createServer(async (request, response) => {
         sendJson(response, 404, { error: "Not found" });
       }
     } catch (error) {
-      sendJson(response, error.statusCode || (error.message === "Payload too large" ? 413 : 400), { error: error.message });
+      logApiError(request, url, error);
+      sendJson(response, getApiErrorStatus(error), { error: error.message });
     }
     return;
   }

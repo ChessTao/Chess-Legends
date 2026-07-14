@@ -1356,41 +1356,19 @@ h3 {
   height: calc(100dvh - clamp(16px, 3vw, 32px));
   max-height: none;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: clamp(8px, 1.4vh, 14px);
-  padding: clamp(10px, 1.8vw, 18px);
+  gap: clamp(14px, 2.2vh, 24px);
+  padding: clamp(18px, 3vw, 34px);
   overflow: hidden;
 }
 
 .info-page.is-leaderboards {
-  align-items: start;
-  padding: 8px clamp(8px, 1.5vw, 16px) clamp(8px, 1.5vw, 16px);
+  align-items: center;
+  padding: clamp(14px, 3vw, 34px);
 }
 
 .info-page.is-leaderboards .info-page-panel {
   width: min(100%, 1380px);
-  max-height: calc(100dvh - 16px);
-  gap: 8px;
-  padding: 10px 14px 14px;
-}
-
-.info-page.is-leaderboards .profile-logo {
-  font-size: clamp(1.45rem, 3vw, 2.25rem);
-  line-height: 0.95;
-}
-
-.info-page.is-leaderboards .setup-subtitle {
-  font-size: clamp(1rem, 2vw, 1.45rem);
-  line-height: 1;
-}
-
-.info-page.is-leaderboards .setup-header {
-  gap: 1px;
-}
-
-.info-page.is-leaderboards .info-back-button {
-  min-height: 28px;
-  padding: 0 14px;
-  font-size: 0.82rem;
+  max-height: calc(100dvh - clamp(28px, 6vw, 68px));
 }
 
 .info-page.is-leaderboards .info-article {
@@ -1398,51 +1376,17 @@ h3 {
 }
 
 .info-page.is-photo-credits {
-  align-items: start;
-  padding: 8px clamp(8px, 1.5vw, 16px) clamp(8px, 1.5vw, 16px);
+  align-items: center;
+  padding: clamp(14px, 3vw, 34px);
 }
 
 .info-page.is-photo-credits .info-page-panel {
   width: min(100%, 1500px);
-  max-height: calc(100dvh - 16px);
-  gap: 8px;
-  padding: 10px 14px 14px;
-}
-
-.info-page.is-photo-credits .setup-header {
-  gap: 1px;
-}
-
-.info-page.is-photo-credits .profile-logo {
-  font-size: clamp(1.45rem, 3vw, 2.25rem);
-  line-height: 0.95;
-}
-
-.info-page.is-photo-credits .setup-subtitle {
-  font-size: clamp(1rem, 2vw, 1.45rem);
-  line-height: 1;
-}
-
-.info-page.is-photo-credits .info-back-button {
-  min-height: 28px;
-  padding: 0 14px;
-  font-size: 0.82rem;
+  max-height: calc(100dvh - clamp(28px, 6vw, 68px));
 }
 
 .info-page.is-photo-credits .info-article {
   padding: 8px;
-}
-
-.info-page.is-biographies .setup-header {
-  gap: 2px;
-}
-
-.info-page.is-biographies .profile-logo {
-  font-size: clamp(1.8rem, 4vw, 3rem);
-}
-
-.info-page.is-biographies .setup-subtitle {
-  font-size: clamp(1.2rem, 2.7vw, 2rem);
 }
 
 .info-page.is-biographies .info-article {
@@ -1712,7 +1656,8 @@ h3 {
 
 .leaderboards-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  align-items: start;
   gap: 8px;
 }
 
@@ -1720,7 +1665,7 @@ h3 {
   display: grid;
   gap: 5px;
   min-height: 0;
-  padding: 9px;
+  padding: 8px;
   border: 1px solid rgba(255, 244, 222, 0.28);
   border-radius: 8px;
   background: rgba(255, 247, 232, 0.07);
@@ -1739,11 +1684,11 @@ h3 {
 
 .leaderboard-row {
   display: grid;
-  grid-template-columns: 28px minmax(0, 1.4fr) minmax(56px, 0.7fr) minmax(48px, 0.55fr);
+  grid-template-columns: 22px minmax(0, 1.5fr) minmax(48px, 0.62fr) minmax(42px, 0.52fr);
   gap: 6px;
   align-items: center;
-  min-height: 24px;
-  padding: 4px 7px;
+  min-height: 22px;
+  padding: 3px 6px;
   border-radius: 6px;
   background: rgba(16, 8, 6, 0.16);
 }
@@ -1767,7 +1712,10 @@ h3 {
 .leaderboard-row strong,
 .leaderboard-row button {
   color: #fff7e8;
-  overflow-wrap: anywhere;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .leaderboard-row button {

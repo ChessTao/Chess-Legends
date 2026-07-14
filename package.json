@@ -1,9 +1,11 @@
 {
   "scripts": {
     "start": "node server.js",
-    "check": "node --check server.js && node --check data/data.js && node --check src/app-state.js && node --check src/screens.js && node --check src/setup.js && node --check src/profile.js && node --check src/profile-form.js && node --check src/board-fit.js && node --check src/game-preview.js && node --check src/intro.js && node --check src/info-pages.js && node --check src/online-lobby.js && node --check src/online-game.js && node --check src/script.js && node --check scripts/smoke-check.js && node scripts/smoke-check.js",
+    "check": "node --check server.js && node --check data/data.js && node --check src/app-state.js && node --check src/screens.js && node --check src/setup.js && node --check src/profile.js && node --check src/profile-form.js && node --check src/board-fit.js && node --check src/game-preview.js && node --check src/intro.js && node --check src/info-pages.js && node --check src/online-lobby.js && node --check src/online-game.js && node --check src/script.js && node --check scripts/smoke-check.js && node --check scripts/online-smoke-check.js && node --check scripts/runtime-backup.js && node --check scripts/runtime-restart-check.js && node scripts/smoke-check.js",
     "smoke": "node scripts/smoke-check.js",
-    "online-smoke": "node scripts/online-smoke-check.js"
+    "online-smoke": "node scripts/online-smoke-check.js",
+    "runtime-backup": "node scripts/runtime-backup.js",
+    "runtime-restart-check": "node scripts/runtime-restart-check.js"
   },
   "private": true
 }

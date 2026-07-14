@@ -99,6 +99,14 @@
       return profile.country ? `${profile.name}, ${profile.country}` : profile.name || "Игрок";
     }
 
+    function formatLeaderboardName(profile) {
+      return profile.name || "Игрок";
+    }
+
+    function isServiceProfile(profile) {
+      return /^(Smoke|Restart|Test|Тест|ТЕСТ)(\s|$)/i.test(String(profile.name || ""));
+    }
+
     function appendEmptyMessage(container) {
       const message = document.createElement("p");
       message.className = "leaderboard-empty";
@@ -206,6 +214,7 @@
             }
 
             cell.textContent = valueIndex === 0 ? String(index + 1) : value;
+            cell.title = row.titles?.[valueIndex] || cell.textContent;
             item.append(cell);
           });
 
@@ -222,19 +231,26 @@
         return;
       }
 
-      const profiles = typeof listProfiles === "function" ? listProfiles() : [];
+      const profiles = (typeof listProfiles === "function" ? listProfiles() : [])
+        .filter((profile) => profile.name && !isServiceProfile(profile));
       const fragment = document.createDocumentFragment();
       const matchRows = profiles
-        .filter((profile) => profile.name)
+        .filter((profile) => (profile.matchGamesPlayed || 0) > 0)
         .sort((first, second) => (second.matchRating || 1000) - (first.matchRating || 1000))
         .slice(0, 5)
         .map((profile) => ({
           profile,
           values: [
             "",
-            formatProfileName(profile),
+            formatLeaderboardName(profile),
             String(profile.matchRating || 1000),
             String(profile.matchGamesPlayed || 0)
+          ],
+          titles: [
+            "",
+            formatProfileName(profile),
+            "Матчевый рейтинг",
+            "Матчей сыграно"
           ]
         }));
 
@@ -264,9 +280,15 @@
             profile,
             values: [
               "",
-              formatProfileName(profile),
+              formatLeaderboardName(profile),
               formatTime(record.bestTime),
               Number.isFinite(record.bestMoves) ? String(record.bestMoves) : "-"
+            ],
+            titles: [
+              "",
+              formatProfileName(profile),
+              "Лучшее время",
+              "Лучшие ходы"
             ]
           }));
 
