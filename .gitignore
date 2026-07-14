@@ -19,3 +19,11 @@ build/
 !.env.example
 .DS_Store
 Thumbs.db
+
+# Local working notes
+GITHUB_UPLOAD_INSTRUCTIONS.md
+Open game link.md
+Last preparations for online.md
+MEMORY_RULES.md
+PASSWORD_LOGIN_MEMO.md
+ONLINE_SMOKE_E2E_TEST_INSTRUCTIONS.md
