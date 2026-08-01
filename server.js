@@ -3,15 +3,12 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const vm = require("vm");
+const { createStorage } = require("./server-storage");
 
 const root = path.resolve(__dirname);
 const port = Number(process.env.PORT) || 4173;
 const host = process.env.HOST || (process.env.NODE_ENV === "production" ? "0.0.0.0" : "127.0.0.1");
-const runtimeDir = path.join(root, ".runtime");
-const profilesFile = path.join(runtimeDir, "profiles.json");
-const sessionsFile = path.join(runtimeDir, "sessions.json");
-const roomsFile = path.join(runtimeDir, "online-rooms.json");
-const serverErrorsFile = path.join(runtimeDir, "server-errors.log");
+const storage = createStorage({ root });
 const sessions = new Map();
 const onlineRooms = new Map();
 const privateRoomCreateTimes = new Map();
@@ -92,10 +89,6 @@ function readRequestJson(request) {
   });
 }
 
-function ensureRuntimeDir() {
-  fs.mkdirSync(runtimeDir, { recursive: true });
-}
-
 function getApiErrorStatus(error) {
   return error.statusCode || (error.message === "Payload too large" ? 413 : 400);
 }
@@ -115,55 +108,27 @@ function logApiError(request, url, error) {
   }
 
   try {
-    ensureRuntimeDir();
-    fs.appendFileSync(serverErrorsFile, `${lines.join("\n")}\n\n`, "utf8");
+    storage.appendServerError(lines);
   } catch (logError) {
     console.error("Failed to write API error log:", logError);
   }
 }
 
-function readJsonFile(filePath, fallback) {
-  try {
-    return JSON.parse(fs.readFileSync(filePath, "utf8"));
-  } catch {
-    return fallback;
-  }
-}
-
-function writeJsonFileAtomic(filePath, payload) {
-  ensureRuntimeDir();
-  const temporaryFile = `${filePath}.${process.pid}.tmp`;
-
-  fs.writeFileSync(temporaryFile, `${JSON.stringify(payload, null, 2)}\n`);
-  fs.renameSync(temporaryFile, filePath);
-}
-
 function readProfiles() {
-  try {
-    const content = fs.readFileSync(profilesFile, "utf8");
-    const parsed = JSON.parse(content);
-
-    return Array.isArray(parsed.profiles) ? parsed.profiles : [];
-  } catch {
-    return [];
-  }
+  return storage.readProfiles();
 }
 
 function writeProfiles(profiles) {
-  writeJsonFileAtomic(profilesFile, { profiles });
+  storage.writeProfiles(profiles);
 }
 
 function loadSessions() {
-  const parsed = readJsonFile(sessionsFile, { sessions: [] });
+  const loadedSessions = storage.readSessions();
   const now = Date.now();
   let changed = false;
 
   sessions.clear();
-  if (!Array.isArray(parsed.sessions)) {
-    return;
-  }
-
-  parsed.sessions.forEach((session) => {
+  loadedSessions.forEach((session) => {
     if (session?.token && session?.profileId) {
       const createdAt = Number(session.createdAt) || now;
       const expiresAt = Number(session.expiresAt) || createdAt + SESSION_TTL_MS;
@@ -186,14 +151,14 @@ function loadSessions() {
 }
 
 function saveSessions() {
-  writeJsonFileAtomic(sessionsFile, {
-    sessions: [...sessions.entries()].map(([token, session]) => ({
+  storage.writeSessions(
+    [...sessions.entries()].map(([token, session]) => ({
       token,
       profileId: session.profileId,
       createdAt: session.createdAt,
       expiresAt: session.expiresAt
     }))
-  });
+  );
 }
 
 function normalizeProfileName(name = "") {
@@ -461,14 +426,10 @@ function normalizeLoadedRoom(room) {
 }
 
 function loadOnlineRooms() {
-  const parsed = readJsonFile(roomsFile, { rooms: [] });
+  const loadedRooms = storage.readRooms();
 
   onlineRooms.clear();
-  if (!Array.isArray(parsed.rooms)) {
-    return;
-  }
-
-  parsed.rooms.forEach((room) => {
+  loadedRooms.forEach((room) => {
     try {
       const loadedRoom = normalizeLoadedRoom(room);
 
@@ -482,9 +443,7 @@ function loadOnlineRooms() {
 }
 
 function saveOnlineRooms() {
-  writeJsonFileAtomic(roomsFile, {
-    rooms: [...onlineRooms.values()].filter(shouldPersistRoom)
-  });
+  storage.writeRooms([...onlineRooms.values()].filter(shouldPersistRoom));
 }
 
 function ensurePublicRooms() {
@@ -1211,14 +1170,21 @@ async function handleApi(request, response, url) {
   return false;
 }
 
-loadSessions();
-cleanupSessions();
-loadOnlineRooms();
-ensurePublicRooms();
-cleanupOnlineRooms();
-saveOnlineRooms();
+async function initializeServerState() {
+  await storage.ensureReady();
+  loadSessions();
+  cleanupSessions();
+  loadOnlineRooms();
+  ensurePublicRooms();
+  cleanupOnlineRooms();
+  saveOnlineRooms();
 
-http.createServer(async (request, response) => {
+  if (typeof storage.waitForIdle === "function") {
+    await storage.waitForIdle();
+  }
+}
+
+const server = http.createServer(async (request, response) => {
   let url;
 
   try {
@@ -1260,6 +1226,41 @@ http.createServer(async (request, response) => {
     response.writeHead(200, getHeaders(types[path.extname(filePath)] || "application/octet-stream", filePath));
     response.end(content);
   });
-}).listen(port, host, () => {
-  console.log(`Chess Legends is running at http://${host}:${port}/`);
 });
+
+async function shutdown(signal) {
+  console.log(`Received ${signal}, shutting down...`);
+  server.close(async () => {
+    try {
+      if (typeof storage.close === "function") {
+        await storage.close();
+      } else if (typeof storage.waitForIdle === "function") {
+        await storage.waitForIdle();
+      }
+      process.exit(0);
+    } catch (error) {
+      console.error("Failed to close storage:", error);
+      process.exit(1);
+    }
+  });
+}
+
+process.on("SIGTERM", () => {
+  shutdown("SIGTERM");
+});
+
+process.on("SIGINT", () => {
+  shutdown("SIGINT");
+});
+
+initializeServerState()
+  .then(() => {
+    server.listen(port, host, () => {
+      console.log(`Chess Legends is running at http://${host}:${port}/`);
+      console.log(`Storage: ${storage.type}`);
+    });
+  })
+  .catch((error) => {
+    console.error("Failed to initialize server:", error);
+    process.exit(1);
+  });

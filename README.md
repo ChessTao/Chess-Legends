@@ -12,6 +12,23 @@ npm start
 
 Локальный сервер нужен для загрузки Markdown-биографий через `fetch()` и для API профилей с паролем.
 
+## Запуск через Docker
+
+```bash
+docker compose up --build
+```
+
+Контейнер приложения открывается на `http://127.0.0.1:4173/`, рядом поднимается PostgreSQL.
+
+Слой хранения отделен в `server-storage.js`: без `DATABASE_URL` сервер пишет в `.runtime/*.json`, а при наличии `DATABASE_URL` использует PostgreSQL.
+
+Для проверки PostgreSQL-режима локально:
+
+```powershell
+docker compose up -d postgres
+$env:DATABASE_URL="postgres://chess_legends:chess_legends_password@localhost:5432/chess_legends"; npm start
+```
+
 ## Проверка
 
 ```bash
@@ -63,6 +80,8 @@ npm run smoke
 При запуске через `npm start` сервер также хранит профили с паролем в `.runtime/profiles.json`. Папка `.runtime/` не предназначена для коммитов.
 
 ## Публикация
+
+Для закрытого теста выбран скрытый раздел на `aveskulov.com`: без ссылки с основного сайта и с `noindex`. Поэтому в `index.html` добавлен `robots: noindex, nofollow`.
 
 Для статического размещения нужно публиковать:
 

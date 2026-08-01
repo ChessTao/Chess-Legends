@@ -1,0 +1,13 @@
+.git
+.agents
+.codex
+.runtime
+node_modules
+*.log
+.env
+.env.*
+!.env.example
+dist
+build
+.cache
+.vite

@@ -26,6 +26,7 @@ const onlineGameJs = read("src/online-game.js");
 const screensJs = read("src/screens.js");
 const profileJs = read("src/profile.js");
 const serverJs = read("server.js");
+const serverStorageJs = read("server-storage.js");
 const packageJson = read("package.json");
 
 function getScriptIndex(scriptPath) {
@@ -110,9 +111,15 @@ assertIncludes(serverJs, "/api/online/rooms", "Server should expose online room 
 assertIncludes(serverJs, "requireSessionProfile", "Online room actions should be bound to server login sessions");
 assertIncludes(serverJs, "connectionStatus", "Online rooms should track player connection state");
 assertIncludes(serverJs, "MAX_PRIVATE_ROOMS_PER_PLAYER", "Server should limit private room creation");
-assertIncludes(serverJs, "sessionsFile", "Server should persist login sessions");
-assertIncludes(serverJs, "roomsFile", "Server should persist active online rooms");
+assertIncludes(serverJs, "storage.writeSessions", "Server should persist login sessions through storage");
+assertIncludes(serverJs, "storage.writeRooms", "Server should persist active online rooms through storage");
+assertIncludes(serverStorageJs, "sessionsFile", "Storage should know where login sessions are stored");
+assertIncludes(serverStorageJs, "roomsFile", "Storage should know where active online rooms are stored");
+assertIncludes(serverStorageJs, "createPostgresStorage", "Storage should support PostgreSQL mode");
+assertIncludes(serverStorageJs, "process.env.DATABASE_URL", "Storage should select PostgreSQL mode from DATABASE_URL");
+assertIncludes(serverStorageJs, "CREATE TABLE IF NOT EXISTS app_store", "PostgreSQL storage should initialize its app_store table");
 assertIncludes(serverJs, "loadOnlineRooms", "Server should restore online rooms at startup");
+assertIncludes(serverJs, "storage.close", "Server should flush storage on shutdown");
 assertIncludes(serverJs, "PUBLIC_FINISHED_RESET_MS", "Public rooms should reset after finished games");
 assertIncludes(serverJs, "SESSION_TTL_MS", "Server sessions should expire");
 assertIncludes(serverJs, "/api/logout", "Server should expose logout for session cleanup");
