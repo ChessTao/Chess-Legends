@@ -183,6 +183,7 @@
       const head = document.createElement("div");
 
       section.className = "leaderboard-section";
+      section.classList.add(difficultyNames.includes(title) ? "leaderboard-difficulty-section" : "leaderboard-match-section");
       heading.textContent = title;
       table.className = "leaderboard-table";
       head.className = "leaderboard-row leaderboard-head";

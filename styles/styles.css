@@ -1368,10 +1368,30 @@ h3 {
 
 .info-page.is-leaderboards .info-page-panel {
   width: min(100%, 1380px);
-  max-height: calc(100dvh - clamp(28px, 6vw, 68px));
+  min-width: 0;
+  height: calc(100dvh - clamp(28px, 6vw, 68px));
+  max-height: none;
+  gap: clamp(8px, 1.4vh, 14px);
+  padding: clamp(12px, 2vw, 22px);
+}
+
+.info-page.is-leaderboards .setup-header {
+  gap: 3px;
+}
+
+.info-page.is-leaderboards .profile-logo {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: clamp(1.75rem, 3.5vw, 3.1rem);
+}
+
+.info-page.is-leaderboards .setup-subtitle {
+  font-size: clamp(1.18rem, 2.4vw, 2rem);
 }
 
 .info-page.is-leaderboards .info-article {
+  min-width: 0;
   padding: 8px;
 }
 
@@ -1655,40 +1675,60 @@ h3 {
 }
 
 .leaderboards-list {
+  width: 100%;
+  min-width: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: start;
-  gap: 8px;
+  align-content: start;
+  gap: clamp(6px, 1vh, 8px);
+  min-height: 0;
+}
+
+.leaderboard-difficulty-section {
+  order: 1;
+}
+
+.leaderboard-match-section {
+  order: 2;
+  grid-column: 1 / -1;
 }
 
 .leaderboard-section {
   display: grid;
-  gap: 5px;
+  min-width: 0;
+  gap: 4px;
   min-height: 0;
-  padding: 8px;
+  padding: 7px;
   border: 1px solid rgba(255, 244, 222, 0.28);
   border-radius: 8px;
   background: rgba(255, 247, 232, 0.07);
 }
 
 .leaderboard-section h3 {
+  min-width: 0;
   margin: 0;
   color: #fff7e8;
-  font-size: 0.96rem;
+  font-size: clamp(0.78rem, 1.25vw, 0.96rem);
+  line-height: 1.05;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .leaderboard-table {
   display: grid;
-  gap: 4px;
+  min-width: 0;
+  gap: 3px;
 }
 
 .leaderboard-row {
   display: grid;
   grid-template-columns: 22px minmax(0, 1.5fr) minmax(48px, 0.62fr) minmax(42px, 0.52fr);
-  gap: 6px;
+  gap: 5px;
   align-items: center;
-  min-height: 22px;
-  padding: 3px 6px;
+  min-height: 20px;
+  padding: 2px 5px;
   border-radius: 6px;
   background: rgba(16, 8, 6, 0.16);
 }
@@ -1704,9 +1744,16 @@ h3 {
 .leaderboard-row strong,
 .leaderboard-row button,
 .leaderboard-empty {
+  min-width: 0;
   color: rgba(251, 241, 223, 0.84);
-  font-size: 0.74rem;
+  font-size: clamp(0.62rem, 0.95vw, 0.74rem);
   line-height: 1.15;
+}
+
+.leaderboard-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .leaderboard-row strong,
@@ -1741,6 +1788,7 @@ h3 {
 .leaderboard-empty {
   margin: 0;
   padding: 8px;
+  overflow-wrap: anywhere;
 }
 
 .leaderboard-profile {
@@ -2057,10 +2105,46 @@ h3 {
     padding-bottom: clamp(74px, 18vh, 112px);
   }
 
+  .info-page.is-leaderboards {
+    padding: clamp(8px, 2vw, 14px);
+    padding-bottom: clamp(74px, 18vh, 112px);
+  }
+
+  .info-page.is-leaderboards .info-page-panel {
+    height: calc(100dvh - clamp(82px, 20vh, 120px));
+    padding: 10px;
+  }
+
+  .info-page.is-leaderboards .profile-logo {
+    max-width: 100%;
+    width: 100%;
+    font-size: clamp(1.55rem, 9vw, 2.25rem);
+  }
+
+  .info-page.is-leaderboards .setup-subtitle {
+    font-size: clamp(1.05rem, 5.8vw, 1.35rem);
+  }
+
+  .leaderboards-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .leaderboard-row {
+    grid-template-columns: 18px minmax(0, 1fr) minmax(36px, 0.54fr) minmax(34px, 0.46fr);
+    gap: 3px;
+    padding: 2px 4px;
+  }
+
   .intro.screen.is-active ~ .project-links {
     display: none;
   }
 
+}
+
+@media (max-width: 640px) {
+  .leaderboards-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @media (max-height: 700px) and (min-width: 900px) {
