@@ -1397,16 +1397,42 @@ h3 {
 
 .info-page.is-photo-credits {
   align-items: center;
-  padding: clamp(14px, 3vw, 34px);
+  padding: clamp(8px, 1.6vw, 18px);
 }
 
 .info-page.is-photo-credits .info-page-panel {
   width: min(100%, 1500px);
-  max-height: calc(100dvh - clamp(28px, 6vw, 68px));
+  height: calc(100dvh - clamp(16px, 3vw, 36px));
+  max-height: none;
+  gap: clamp(5px, 1vh, 10px);
+  padding: clamp(10px, 1.6vw, 18px);
+  overflow: hidden;
+}
+
+.info-page.is-photo-credits .setup-header {
+  gap: 2px;
+}
+
+.info-page.is-photo-credits .profile-logo {
+  font-size: clamp(1.55rem, 2.8vw, 2.7rem);
+  line-height: 0.88;
+}
+
+.info-page.is-photo-credits .setup-subtitle {
+  font-size: clamp(1.35rem, 2.8vw, 2.7rem);
+  line-height: 0.95;
+}
+
+.info-page.is-photo-credits .info-back-button {
+  min-height: 28px;
 }
 
 .info-page.is-photo-credits .info-article {
-  padding: 8px;
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 7px;
+  padding: 8px 10px;
+  overflow: hidden;
 }
 
 .info-page.is-biographies .info-article {
@@ -1581,6 +1607,12 @@ h3 {
 .credits-grid {
   display: grid;
   gap: 8px;
+  min-height: 0;
+}
+
+.info-page.is-photo-credits .credits-list {
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
 }
 
 .credits-note {
@@ -1592,6 +1624,18 @@ h3 {
 
 .credits-grid {
   grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+  align-content: start;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 6px;
+  scrollbar-color: rgba(255, 244, 222, 0.52) rgba(16, 8, 6, 0.28);
+  scrollbar-width: thin;
+}
+
+.credits-source-note {
+  color: rgba(251, 241, 223, 0.72);
+  font-size: 0.76rem;
+  line-height: 1.25;
 }
 
 .credit-item {
