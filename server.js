@@ -332,6 +332,20 @@ function createPlayerToken() {
   return crypto.randomBytes(18).toString("hex");
 }
 
+function createPrivateSpectatorToken(room) {
+  return crypto
+    .createHmac("sha256", room.passwordHash || room.id)
+    .update(`${room.id}:${room.passwordSalt}`)
+    .digest("hex");
+}
+
+function verifyPrivateSpectatorToken(room, token) {
+  const expected = Buffer.from(createPrivateSpectatorToken(room));
+  const actual = Buffer.from(String(token || ""));
+
+  return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
+}
+
 function normalizeOnlineLevel(level) {
   const normalizedLevel = String(level || "Начинающий").trim();
 
@@ -581,12 +595,13 @@ function closeExpiredMismatch(room) {
   saveOnlineRooms();
 }
 
-function serializeRoom(room, token = "") {
+function serializeRoom(room, token = "", options = {}) {
   closeExpiredMismatch(room);
   refreshRoomConnections(room);
 
   const player = token ? getRoomPlayer(room, token) : null;
   const canSeePrivateCode = !room.isPrivate || Boolean(player);
+  const canSeeGame = Boolean(room.game && (player || options.includeGame));
 
   return {
     id: room.id,
@@ -595,11 +610,12 @@ function serializeRoom(room, token = "") {
     level: room.level,
     isPrivate: room.isPrivate,
     status: room.status,
+    viewerRole: player ? "player" : options.includeGame ? "spectator" : "guest",
     playerIndex: player ? room.players.indexOf(player) : null,
     players: room.players
       .filter((publicPlayer) => publicPlayer.connectionStatus !== "left")
       .map(({ token: _token, joinedAt: _joinedAt, lastSeenAt: _lastSeenAt, leftAt: _leftAt, ...publicPlayer }) => publicPlayer),
-    game: player && room.game ? {
+    game: canSeeGame ? {
       settings: room.game.settings,
       cards: room.game.cards,
       moves: room.game.moves,
@@ -861,6 +877,15 @@ async function handleApi(request, response, url) {
       return true;
     }
 
+    if (room.status === "playing" && room.players.filter((item) => item.connectionStatus !== "left").length >= 2) {
+      sendJson(response, 409, {
+        error: "Партия уже идет. Можно только наблюдать.",
+        canSpectate: true,
+        room: serializeRoom(room, "", { includeGame: true })
+      });
+      return true;
+    }
+
     const player = joinRoom(room, profile);
 
     sendJson(response, 200, {
@@ -937,12 +962,71 @@ async function handleApi(request, response, url) {
       return true;
     }
 
+    if (room.status === "playing" && room.players.filter((item) => item.connectionStatus !== "left").length >= 2) {
+      sendJson(response, 409, {
+        error: "Партия уже идет. Можно только наблюдать.",
+        canSpectate: true,
+        room: serializeRoom(room, "", { includeGame: true })
+      });
+      return true;
+    }
+
     const player = joinRoom(room, profile);
 
     sendJson(response, 200, {
       playerToken: player.token,
       room: serializeRoom(room, player.token)
     });
+    return true;
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/online/rooms/private/spectate") {
+    const body = await readRequestJson(request);
+    const code = String(body.code || "").trim().toUpperCase();
+    const room = [...onlineRooms.values()].find((item) => item.isPrivate && item.code === code);
+
+    if (!room || !verifyPassword(room, String(body.password || ""))) {
+      sendJson(response, 401, { error: "Неверный код или пароль комнаты." });
+      return true;
+    }
+
+    if (!room.game) {
+      sendJson(response, 409, { error: "Партия еще не началась. Пока в комнате ждут соперника." });
+      return true;
+    }
+
+    sendJson(response, 200, {
+      spectatorToken: createPrivateSpectatorToken(room),
+      room: serializeRoom(room, "", { includeGame: true })
+    });
+    return true;
+  }
+
+  const onlineRoomSpectateMatch = url.pathname.match(/^\/api\/online\/rooms\/([^/]+)\/spectate$/);
+
+  if (request.method === "GET" && onlineRoomSpectateMatch) {
+    const room = onlineRooms.get(decodeURIComponent(onlineRoomSpectateMatch[1]));
+
+    if (!room) {
+      sendJson(response, 404, { error: "Комната не найдена." });
+      return true;
+    }
+
+    if (room.isPrivate && !verifyPrivateSpectatorToken(room, url.searchParams.get("spectatorToken") || "")) {
+      sendJson(response, 403, { error: "Нет доступа к этой комнате." });
+      return true;
+    }
+
+    if (!room.game) {
+      sendJson(response, 409, {
+        error: room.isPrivate
+          ? "Партия еще не началась. Пока в комнате ждут соперника."
+          : "Партия еще не началась. Можно войти игроком."
+      });
+      return true;
+    }
+
+    sendJson(response, 200, { room: serializeRoom(room, "", { includeGame: true }) });
     return true;
   }
 

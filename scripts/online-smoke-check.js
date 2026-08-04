@@ -105,6 +105,40 @@ async function joinPrivateRoom(player, roomInfo) {
   };
 }
 
+async function spectatePrivateRoom(roomInfo) {
+  const result = await request("/api/online/rooms/private/spectate", {
+    method: "POST",
+    body: {
+      code: roomInfo.room.code,
+      password: ROOM_PASSWORD
+    }
+  });
+
+  assert(result.response.status === 200, `private room spectate failed with ${result.response.status}`);
+  assert(result.data.room?.viewerRole === "spectator", "private spectator role missing");
+  assert(result.data.room?.playerIndex === null, "spectator should not have a player index");
+  assert(result.data.room?.players?.length === 2, "spectator should see both players");
+  assert(result.data.room?.game?.cards?.length > 0, "spectator game cards missing");
+  assert(!result.data.playerToken, "spectator should not receive a player token");
+  assert(result.data.spectatorToken, "private spectator token missing");
+
+  return {
+    room: result.data.room,
+    spectatorToken: result.data.spectatorToken
+  };
+}
+
+async function spectatePublicRoom(roomId, spectatorToken = "") {
+  const query = spectatorToken ? `?spectatorToken=${encodeURIComponent(spectatorToken)}` : "";
+  const result = await request(`/api/online/rooms/${encodeURIComponent(roomId)}/spectate${query}`);
+
+  assert(result.response.status === 200, `public room spectate failed with ${result.response.status}`);
+  assert(result.data.room?.viewerRole === "spectator", "public spectator role missing");
+  assert(result.data.room?.game?.cards?.length > 0, "public spectator game cards missing");
+
+  return result.data.room;
+}
+
 async function getRoom(roomId, player) {
   const result = await request(`/api/online/rooms/${encodeURIComponent(roomId)}?token=${encodeURIComponent(player.playerToken)}`, {
     cookie: player.cookie
@@ -284,6 +318,10 @@ async function main() {
 
   await assertWrongTurnRejected(roomForA, players);
   const updatedRoom = await assertCurrentPlayerCanReveal(roomForA, players);
+  const spectator = await spectatePrivateRoom(created);
+  const spectatorRoom = await spectatePublicRoom(created.room.id, spectator.spectatorToken);
+
+  assert(spectatorRoom.game.cards[0].isOpen === updatedRoom.game.cards[0].isOpen, "spectator should see current board state");
 
   await assertActiveRoomRestores(playerA, updatedRoom.id);
   await assertActiveRoomRestores(playerB, updatedRoom.id);

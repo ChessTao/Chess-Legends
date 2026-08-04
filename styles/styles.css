@@ -420,7 +420,8 @@ h3 {
 }
 
 .online-room-card.is-busy {
-  opacity: 0.58;
+  background: rgba(129, 190, 255, 0.08);
+  border-color: rgba(129, 190, 255, 0.42);
 }
 
 .online-room-card > span:not(.online-room-state) {
@@ -455,7 +456,9 @@ h3 {
 }
 
 .online-room-card.is-busy .online-room-state {
-  color: rgba(255, 247, 232, 0.76);
+  border-color: rgba(129, 190, 255, 0.64);
+  color: #cfe8ff;
+  background: rgba(129, 190, 255, 0.12);
 }
 
 .online-private-panel {
@@ -1134,6 +1137,10 @@ h3 {
 .memory-board.is-waiting-turn .memory-card:not(.is-open):not(.is-matched) {
   cursor: wait;
   opacity: 0.72;
+}
+
+.memory-board.is-spectating .memory-card {
+  cursor: default;
 }
 
 .memory-board[data-size="large"] {

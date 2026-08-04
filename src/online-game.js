@@ -49,6 +49,24 @@
     const opponentIndex = playerIndex === 0 ? 1 : 0;
     const currentPlayer = room.players[room.game.turnIndex];
 
+    if (state.isSpectator) {
+      scorePanel.innerHTML = `
+        <div class="score-card">
+          <span class="score-label">${getPlayerName(room.players[0], "Игрок 1")}</span>
+          <strong>${room.game.scores[0] || 0}</strong>
+        </div>
+        <div class="score-card">
+          <span class="score-label">${getPlayerName(room.players[1], "Игрок 2")}</span>
+          <strong>${room.game.scores[1] || 0}</strong>
+        </div>
+        <div class="score-card">
+          <span class="score-label">Ход</span>
+          <strong>${getPlayerName(currentPlayer, "Игрок")}</strong>
+        </div>
+      `;
+      return;
+    }
+
     scorePanel.innerHTML = `
       <div class="score-card">
         <span class="score-label">Вы</span>
@@ -77,6 +95,8 @@
 
     if (winner === null) {
       resultTitle.textContent = "Ничья";
+    } else if (state.isSpectator) {
+      resultTitle.textContent = `Победил ${getPlayerName(room.players[winner], "игрок")}`;
     } else if (winner === playerIndex) {
       resultTitle.textContent = "Вы выиграли";
     } else {
@@ -85,8 +105,8 @@
 
     state.resultBaseSummary = `Счет: ${room.game.scores[0]}-${room.game.scores[1]}. Ходы: ${room.game.moves}.`;
     resultSummary.textContent = state.resultBaseSummary;
-    replayButton.disabled = false;
-    replayButton.textContent = "Реванш";
+    replayButton.disabled = state.isSpectator;
+    replayButton.textContent = state.isSpectator ? "Только игроки" : "Реванш";
     changeSettingsButton.textContent = "В лобби";
     resultPanel.classList.add("is-visible");
     resultPanel.setAttribute("aria-hidden", "false");
@@ -104,14 +124,15 @@
 
       element.classList.toggle("is-open", card.isOpen || card.isMatched);
       element.classList.toggle("is-matched", card.isMatched);
-      element.disabled = card.isMatched || room.status === "finished" || room.game.turnIndex !== state.playerIndex;
+      element.disabled = state.isSpectator || card.isMatched || room.status === "finished" || room.game.turnIndex !== state.playerIndex;
       element.setAttribute(
         "aria-label",
         card.isOpen || card.isMatched ? `Открытая карточка: ${card.surname}` : "Закрытая карточка Memory"
       );
     });
 
-    memoryBoard.classList.toggle("is-waiting-turn", room.game.turnIndex !== state.playerIndex);
+    memoryBoard.classList.toggle("is-waiting-turn", !state.isSpectator && room.game.turnIndex !== state.playerIndex);
+    memoryBoard.classList.toggle("is-spectating", state.isSpectator);
   }
 
   function renderWaitingRoom() {
@@ -201,7 +222,9 @@
     const columns = state.difficultySettings[room.level]?.columns || 4;
     const rows = Math.ceil(room.game.cards.length / columns);
 
-    gameChoice.textContent = `${room.name} / Сетевая игра / ${room.level}`;
+    gameChoice.textContent = state.isSpectator
+      ? `${room.name} / Наблюдение / ${room.level}`
+      : `${room.name} / Сетевая игра / ${room.level}`;
     memoryBoard.style.setProperty("--columns", columns);
     memoryBoard.style.setProperty("--rows", rows);
     memoryBoard.dataset.columns = columns;
@@ -268,7 +291,10 @@
         return;
       }
 
-      const data = await requestJson(`/api/online/rooms/${encodeURIComponent(state.room.id)}?token=${encodeURIComponent(state.playerToken)}`);
+      const path = state.isSpectator
+        ? `/api/online/rooms/${encodeURIComponent(state.room.id)}/spectate${state.spectatorToken ? `?spectatorToken=${encodeURIComponent(state.spectatorToken)}` : ""}`
+        : `/api/online/rooms/${encodeURIComponent(state.room.id)}?token=${encodeURIComponent(state.playerToken)}`;
+      const data = await requestJson(path);
 
       renderRoom(data.room);
       onStateChange?.("onlineGame", getSnapshot());
@@ -286,7 +312,7 @@
     }
 
     async function revealCard(index) {
-      if (!state || state.room.status !== "playing" || state.room.game.turnIndex !== state.playerIndex) {
+      if (!state || state.isSpectator || state.room.status !== "playing" || state.room.game.turnIndex !== state.playerIndex) {
         return;
       }
 
@@ -304,6 +330,8 @@
         room,
         playerToken,
         playerIndex: room.playerIndex || 0,
+        isSpectator: Boolean(options.spectator || room.viewerRole === "spectator"),
+        spectatorToken: options.spectatorToken || "",
         difficultySettings,
         gameChoice,
         scorePanel,
@@ -326,6 +354,10 @@
     }
 
     async function resumeActive(options = {}) {
+      if (options.spectator) {
+        return false;
+      }
+
       const data = await requestJson("/api/online/active");
 
       if (!data.room || !data.playerToken) {
@@ -340,7 +372,7 @@
       const previousState = state;
 
       stopPolling();
-      if (previousState && options.leave !== false) {
+      if (previousState && !previousState.isSpectator && options.leave !== false) {
         requestJson(`/api/online/rooms/${encodeURIComponent(previousState.room.id)}/leave`, {
           playerToken: previousState.playerToken
         }).catch(() => {});
@@ -353,6 +385,7 @@
       return state ? {
         onlineRoomId: state.room.id,
         onlinePlayerToken: state.playerToken,
+        onlineSpectator: state.isSpectator,
         privateInviteText: state.privateInviteText || ""
       } : {};
     }
@@ -371,7 +404,11 @@
 
     function init() {
       memoryBoard.addEventListener("click", handleBoardClick);
-      replayButton.onclick = requestRematch;
+      replayButton.onclick = () => {
+        if (!state?.isSpectator) {
+          requestRematch();
+        }
+      };
       changeSettingsButton.onclick = onBackToLobby;
     }
 

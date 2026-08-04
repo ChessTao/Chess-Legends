@@ -27,6 +27,7 @@
       status,
       createPrivateButton,
       joinPrivateButton,
+      spectatePrivateButton,
       logoutButton,
       soloButton
     } = elements;
@@ -82,8 +83,8 @@
     function getRoomState(room, players) {
       if (room?.status === "playing") {
         return {
-          label: "Идет партия",
-          title: "Партия уже идет",
+          label: "Смотреть",
+          title: "Партия уже идет. Нажмите, чтобы наблюдать.",
           className: "is-busy"
         };
       }
@@ -174,6 +175,25 @@
       onRoomJoined?.(data.room, data.playerToken);
     }
 
+    async function spectatePublicRoom(roomButton) {
+      const roomId = roomButton.dataset.roomId || "";
+      const roomName = roomButton.dataset.roomName || "комната";
+
+      if (!roomId) {
+        setStatus("Комната пока не готова для просмотра.");
+        return;
+      }
+
+      setStatus(`Заглядываем в комнату «${roomName}»...`);
+      const data = await requestJson(`/api/online/rooms/${encodeURIComponent(roomId)}/spectate`);
+
+      setStatus(`Вы наблюдаете за партией в комнате «${data.room.name}».`);
+      onRoomJoined?.(data.room, "", {
+        spectator: true,
+        spectatorToken: data.spectatorToken || ""
+      });
+    }
+
     async function createPrivateRoom() {
       const privateRoomName = roomName.value.trim();
       const privateRoomLevel = roomLevel.value;
@@ -235,6 +255,30 @@
       onRoomJoined?.(data.room, data.playerToken);
     }
 
+    async function spectatePrivateRoom() {
+      const code = roomCode.value.trim();
+      const password = joinPassword.value.trim();
+
+      if (!code || !password) {
+        setStatus("Введите код входа и пароль, чтобы наблюдать за приватной партией.");
+        (code ? joinPassword : roomCode).focus();
+        return;
+      }
+
+      setStatus("Пробуем заглянуть в приватную комнату...");
+
+      const data = await requestJson("/api/online/rooms/private/spectate", {
+        code,
+        password
+      });
+
+      setStatus(`Вы наблюдаете за партией в комнате «${data.room.name}».`);
+      onRoomJoined?.(data.room, "", {
+        spectator: true,
+        spectatorToken: data.spectatorToken || ""
+      });
+    }
+
     function init() {
       soloButton?.addEventListener("click", onShowSolo);
       logoutButton?.addEventListener("click", onLogout);
@@ -243,6 +287,14 @@
         const roomButton = event.target.closest(".online-room-card");
 
         if (!roomButton) {
+          return;
+        }
+
+        if (roomButton.classList.contains("is-busy")) {
+          spectatePublicRoom(roomButton).catch((error) => {
+            setStatus(error.message);
+            refreshRooms();
+          });
           return;
         }
 
@@ -257,6 +309,9 @@
       });
       joinPrivateButton?.addEventListener("click", () => {
         joinPrivateRoom().catch((error) => setStatus(error.message));
+      });
+      spectatePrivateButton?.addEventListener("click", () => {
+        spectatePrivateRoom().catch((error) => setStatus(error.message));
       });
       roomName?.addEventListener("input", () => save());
       roomLevel?.addEventListener("change", () => save());

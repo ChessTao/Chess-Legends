@@ -223,6 +223,7 @@ const onlineLobby = createOnlineLobbyController({
     status: document.querySelector("#onlineStatus"),
     createPrivateButton: document.querySelector("#createPrivateRoomButton"),
     joinPrivateButton: document.querySelector("#joinPrivateRoomButton"),
+    spectatePrivateButton: document.querySelector("#spectatePrivateRoomButton"),
     logoutButton: document.querySelector("#onlineLogoutProfileButton"),
     soloButton: document.querySelector("#onlineSoloModeButton")
   },
@@ -606,6 +607,12 @@ function restoreState() {
   }
 
   if (savedScreenName === "onlineGame") {
+    if (state.onlineSpectator) {
+      showScreen(hasConfirmedProfile ? onlineScreen : profileScreen);
+      saveState(hasConfirmedProfile ? "online" : "profile");
+      return;
+    }
+
     showScreen(hasConfirmedProfile ? playModeScreen : profileScreen);
 
     if (hasConfirmedProfile) {
