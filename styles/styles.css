@@ -2059,8 +2059,18 @@ h3 {
 }
 
 @media (max-width: 720px) {
+  .setup,
+  .profile {
+    padding: clamp(8px, 2.5vw, 14px);
+  }
+
   .setup-panel {
+    width: min(96vw, 560px);
+    max-height: calc(100dvh - clamp(16px, 5vw, 28px));
+    gap: clamp(9px, 1.6vh, 14px);
+    padding: clamp(12px, 3.5vw, 18px);
     border-radius: 16px;
+    overflow: auto;
   }
 
   h2 {
@@ -2133,8 +2143,166 @@ h3 {
     border-bottom: 0;
   }
 
+  .online-panel {
+    width: min(96vw, 560px);
+    max-height: calc(100dvh - clamp(16px, 5vw, 28px));
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: clamp(10px, 3vw, 14px);
+    overflow: hidden;
+  }
+
+  #onlineScreen .profile-logo,
+  #setupScreen .profile-logo {
+    max-width: 100%;
+    font-size: clamp(1.85rem, 9vw, 2.55rem);
+    line-height: 0.92;
+  }
+
+  #onlineScreen .setup-subtitle,
+  #setupScreen .setup-subtitle {
+    font-size: clamp(1.28rem, 6.8vw, 1.75rem);
+  }
+
+  .online-room-panel {
+    gap: 8px;
+    padding: 10px;
+    overscroll-behavior: contain;
+  }
+
+  .online-room-panel h3,
+  .online-private-panel h3,
+  #setupScreen .option-group h3 {
+    font-size: clamp(1.02rem, 5.4vw, 1.28rem);
+    line-height: 1.08;
+  }
+
+  .online-room-panel .profile-subtitle,
+  .online-status {
+    font-size: 0.86rem;
+    line-height: 1.18;
+  }
+
+  .online-room-list,
+  .online-room-group {
+    gap: 6px;
+  }
+
+  .online-room-group h4 {
+    min-height: 34px;
+    display: grid;
+    place-items: center;
+    margin: -2px -2px 2px;
+    font-size: 0.78rem;
+  }
+
+  .online-room-card {
+    min-height: 34px;
+    gap: 6px;
+  }
+
+  .online-room-card > span:not(.online-room-state) {
+    font-size: clamp(0.96rem, 5vw, 1.18rem);
+  }
+
+  .online-room-state {
+    min-width: 68px;
+    padding: 4px 6px;
+    font-size: 0.64rem;
+  }
+
+  .setup-corner-actions {
+    position: static;
+    width: 100%;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .setup-corner-actions .profile-link {
+    flex: 1 1 148px;
+    min-height: 42px;
+    min-width: 0;
+    padding: 0 12px;
+    font-size: clamp(0.86rem, 4.4vw, 1rem);
+    line-height: 1.05;
+    white-space: normal;
+  }
+
+  #setupScreen .play-button {
+    width: min(100%, 260px);
+    min-height: 44px;
+    margin-top: 2px;
+  }
+
+  #setupScreen .card-type-row,
+  #setupScreen .difficulty-row {
+    gap: 6px;
+    padding: 5px;
+    border-radius: 18px;
+  }
+
+  #setupScreen .option-card,
+  #setupScreen .difficulty {
+    min-height: 40px;
+  }
+
+  #setupScreen .option-title,
+  #setupScreen .difficulty {
+    font-size: clamp(0.96rem, 4.8vw, 1.16rem);
+  }
+
   .game-shell {
+    width: calc(100vw - 16px);
+    height: calc(100dvh - 16px);
+    --board-max-height: calc(100dvh - 186px);
+    gap: 6px;
+    padding: 8px;
     border-radius: 16px;
+  }
+
+  .game-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+
+  .game-title {
+    max-width: 100%;
+    font-size: clamp(1.2rem, 7vw, 1.8rem);
+  }
+
+  .game-choice {
+    font-size: 0.78rem;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+  }
+
+  .back-button {
+    min-width: 76px;
+    min-height: 34px;
+    padding: 0 12px;
+    font-size: 0.86rem;
+  }
+
+  .score-panel {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .score-card {
+    min-height: 34px;
+    gap: 1px;
+    padding: 5px 6px;
+  }
+
+  .score-label {
+    font-size: 0.58rem;
+  }
+
+  .score-card strong {
+    min-width: 0;
+    font-size: clamp(0.8rem, 4vw, 1rem);
+    overflow-wrap: anywhere;
   }
 
   .project-links {
@@ -2195,6 +2363,38 @@ h3 {
 @media (max-width: 640px) {
   .leaderboards-list {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 420px) {
+  .setup-panel,
+  .online-panel {
+    width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+  }
+
+  #onlineScreen .profile-logo,
+  #setupScreen .profile-logo {
+    font-size: clamp(1.65rem, 8.6vw, 2.25rem);
+  }
+
+  .online-room-panel {
+    padding: 8px;
+  }
+
+  .online-room-card {
+    min-height: 32px;
+  }
+
+  .online-private-panel,
+  .online-private-column {
+    padding: 8px;
+  }
+
+  .profile-field input,
+  .profile-field select,
+  .online-room-action {
+    min-height: 36px;
   }
 }
 

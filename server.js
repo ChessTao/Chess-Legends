@@ -623,6 +623,7 @@ function serializeRoom(room, token = "", options = {}) {
       scores: room.game.scores,
       turnIndex: room.game.turnIndex,
       winner: room.game.winner,
+      forfeitBy: Number.isInteger(room.game.forfeitBy) ? room.game.forfeitBy : null,
       finishedAt: room.game.finishedAt || null
     } : null
   };
@@ -759,6 +760,30 @@ function saveOnlineResult(room) {
   writeProfiles(profiles);
   room.resultSaved = true;
   saveOnlineRooms();
+}
+
+function forfeitOnlineGame(room, player) {
+  if (room.status !== "playing" || !room.game) {
+    return false;
+  }
+
+  const playerIndex = room.players.indexOf(player);
+  const opponentIndex = playerIndex === 0 ? 1 : 0;
+
+  if (playerIndex < 0 || !room.players[opponentIndex]) {
+    return false;
+  }
+
+  closeExpiredMismatch(room);
+  room.status = "finished";
+  room.game.openCards = [];
+  room.game.pendingMismatch = null;
+  room.game.winner = opponentIndex;
+  room.game.finishedAt = Date.now();
+  room.game.forfeitBy = playerIndex;
+  room.updatedAt = Date.now();
+  saveOnlineResult(room);
+  return true;
 }
 
 function revealOnlineCard(room, player, index) {
@@ -1138,6 +1163,7 @@ async function handleApi(request, response, url) {
 
     if (room) {
       const player = getAuthorizedRoomPlayer(request, room, String(body.playerToken || ""));
+      const wasForfeited = forfeitOnlineGame(room, player);
 
       player.connectionStatus = "left";
       player.leftAt = Date.now();
@@ -1149,7 +1175,7 @@ async function handleApi(request, response, url) {
         onlineRooms.set(room.id, createRoom({ id: room.id, name: room.name, level: room.level }));
       } else if (room.isPrivate && activePlayers.length === 0) {
         onlineRooms.delete(room.id);
-      } else if (room.status !== "finished") {
+      } else if (!wasForfeited && room.status !== "finished") {
         room.status = "waiting";
         room.game = null;
       }

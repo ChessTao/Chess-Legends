@@ -404,6 +404,20 @@ function updateCurrentPlayerLabel() {
   [currentPlayerLabel, modeCurrentPlayerLabel].forEach(renderCurrentPlayerLabel);
 }
 
+function setGameExitButtonMode(isOnline) {
+  if (!backToSetup) {
+    return;
+  }
+
+  backToSetup.textContent = isOnline ? "Выйти" : "Назад";
+  backToSetup.setAttribute(
+    "aria-label",
+    isOnline
+      ? "Выйти из сетевой игры"
+      : "Вернуться к настройкам игры"
+  );
+}
+
 function showProfileScreen() {
   stopGame();
   onlineGame.stop();
@@ -497,6 +511,7 @@ function logoutProfile() {
 
 function startGamePreview() {
   onlineGame.stop();
+  setGameExitButtonMode(false);
   setGameSettings({
     ...getGameSettings(),
     mode: "Один игрок"
@@ -545,6 +560,7 @@ function getProfileForOnline() {
 
 function startOnlineGame(room, playerToken, options = {}) {
   stopGame();
+  setGameExitButtonMode(true);
   hasConfirmedProfile = true;
   updateSideProfileButton();
   onlineGame.start(room, playerToken, options);
@@ -621,6 +637,7 @@ function restoreState() {
           if (resumed) {
             hasConfirmedProfile = true;
             updateSideProfileButton();
+            setGameExitButtonMode(true);
             showScreen(gameScreen);
             saveState("onlineGame");
             return;
@@ -752,11 +769,20 @@ playButton.addEventListener("click", startGamePreview);
 
 backToSetup.addEventListener("click", () => {
   if (onlineGame.isActive()) {
+    const confirmed = window.confirm(
+      "Выйти из сетевой игры? Если вы покинете текущую партию, вам будет засчитано поражение."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
     onlineGame.stop();
     showOnlineScreen();
     return;
   }
 
+  setGameExitButtonMode(false);
   stopGame();
   showScreen(setupScreen);
   saveState("setup");

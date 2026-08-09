@@ -274,13 +274,28 @@ async function assertActiveRoomRestores(player, roomId) {
 }
 
 async function leaveRoom(roomId, player) {
-  await request(`/api/online/rooms/${encodeURIComponent(roomId)}/leave`, {
+  return request(`/api/online/rooms/${encodeURIComponent(roomId)}/leave`, {
     method: "POST",
     cookie: player.cookie,
     body: {
       playerToken: player.playerToken
     }
   });
+}
+
+async function assertLeaveForfeits(roomId, leaver, opponent) {
+  const leaveResult = await leaveRoom(roomId, leaver);
+
+  assert(leaveResult.response.status === 200, `forfeit leave failed with ${leaveResult.response.status}`);
+
+  const opponentRoom = await getRoom(roomId, opponent);
+
+  assert(opponentRoom.status === "finished", "leaving an active online game should finish the room");
+  assert(opponentRoom.game?.winner === opponent.playerIndex, "opponent should win after active player leaves");
+  assert(
+    opponentRoom.game?.forfeitBy === leaver.playerIndex,
+    `forfeit marker should point to the leaving player, got ${opponentRoom.game?.forfeitBy}, expected ${leaver.playerIndex}`
+  );
 }
 
 async function main() {
@@ -329,7 +344,7 @@ async function main() {
   const finishedRoom = await finishRoom(updatedRoom, players);
   const rematchRoom = await assertRematchStarts(finishedRoom.id, players);
 
-  await leaveRoom(rematchRoom.id, players[0]);
+  await assertLeaveForfeits(rematchRoom.id, players[0], players[1]);
   await leaveRoom(rematchRoom.id, players[1]);
 
   console.log("Online smoke/e2e check passed.");
