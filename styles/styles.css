@@ -1400,6 +1400,10 @@ h3 {
 .info-page.is-leaderboards .info-article {
   min-width: 0;
   padding: 8px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: rgba(255, 244, 222, 0.52) rgba(16, 8, 6, 0.28);
+  scrollbar-width: thin;
 }
 
 .info-page.is-photo-credits {
@@ -1734,6 +1738,7 @@ h3 {
   align-content: start;
   gap: clamp(6px, 1vh, 8px);
   min-height: 0;
+  grid-auto-rows: max-content;
 }
 
 .leaderboard-difficulty-section {
@@ -1749,11 +1754,12 @@ h3 {
   display: grid;
   min-width: 0;
   gap: 4px;
-  min-height: 0;
+  min-height: max-content;
   padding: 7px;
   border: 1px solid rgba(255, 244, 222, 0.28);
   border-radius: 8px;
   background: rgba(255, 247, 232, 0.07);
+  overflow: hidden;
 }
 
 .leaderboard-section h3 {
@@ -1771,6 +1777,7 @@ h3 {
   display: grid;
   min-width: 0;
   gap: 3px;
+  min-height: max-content;
 }
 
 .leaderboard-row {
@@ -1846,10 +1853,12 @@ h3 {
   grid-column: 1 / -1;
   display: grid;
   gap: 10px;
+  min-height: max-content;
   padding: 12px;
   border: 1px solid rgba(255, 224, 166, 0.5);
   border-radius: 8px;
   background: rgba(16, 8, 6, 0.2);
+  overflow: hidden;
 }
 
 .leaderboard-profile-head,
@@ -2345,6 +2354,66 @@ h3 {
   .profile-field select,
   .online-room-action {
     min-height: 36px;
+  }
+}
+
+@media (max-height: 760px) and (min-width: 900px) {
+  .info-page.is-leaderboards .info-page-panel {
+    gap: 6px;
+    padding: 10px 14px;
+  }
+
+  .info-page.is-leaderboards .profile-logo {
+    font-size: clamp(1.55rem, 3vw, 2.55rem);
+    line-height: 0.86;
+  }
+
+  .info-page.is-leaderboards .setup-subtitle {
+    font-size: clamp(1rem, 2vw, 1.5rem);
+  }
+
+  .info-page.is-leaderboards .info-back-button {
+    min-height: 26px;
+    padding: 0 16px;
+  }
+
+  .info-page.is-leaderboards .info-article {
+    padding: 6px;
+  }
+
+  .leaderboards-list {
+    gap: 6px;
+  }
+
+  .leaderboard-profile {
+    gap: 7px;
+    padding: 9px;
+  }
+
+  .leaderboard-profile-head h3 {
+    font-size: clamp(1.35rem, 2.4vw, 2rem);
+    line-height: 1;
+  }
+
+  .leaderboard-profile-details,
+  .leaderboard-profile-records {
+    gap: 6px;
+  }
+
+  .leaderboard-profile-details div,
+  .leaderboard-profile-record {
+    gap: 3px;
+    padding: 6px 8px;
+  }
+
+  .leaderboard-section {
+    gap: 3px;
+    padding: 6px;
+  }
+
+  .leaderboard-row {
+    min-height: 18px;
+    padding: 2px 5px;
   }
 }
 
